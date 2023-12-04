@@ -1,0 +1,3261 @@
+############ STEP 1:  IMPORT DATA 
+###METHOD 1: we can replace "?" by "NA" using "read.csv" if it exists
+d=read.csv("C:/Users/LF ELEC/Desktop/CNAM/STA- 211/heart.csv",
+           na.strings=c("",".","NA","?") )
+
+###############################################################################
+############################################################################### 
+
+
+
+############ STEP 2: NETOYER LA BASE DE DONNEE
+##verifier s'il existe des NA
+complete.cases(d)
+##on peut Eliminer les valeurs manquantes "NA"
+data=na.omit(d)
+
+##verifier s'il existe des duplications
+duplicated(d)
+##on peut Eliminer les diplications 
+unique(d)
+
+## on peut comparer la dimension entre la base de donnee avant et apres nettoyge
+dim(data)
+dim(d)
+## base de donnee "data Frame"
+View(data)
+
+###############################################################################
+###############################################################################
+
+########## STEP 2: Statistique Descriptive  "Analyse Univariee"  
+##la fonction summary affiche  s'il existe des valeurs manquantes 
+##la fonction "describe" donne des infos plusque la fonction "summary"
+summary(data)
+### Package Hmisc
+library(Hmisc)
+describe(data)
+
+### Package psych
+#Le package « psych » permet de calculer les statistiques présentées par 
+#la fonction describe() (contenue par défaut dans R). Elles sont (dans l’ordre) :
+#1)Le nombre d’observations
+#2)la moyenne
+#3)l’écart-type
+#4)la médiane
+#5)la moyenne tronquée (calculée en enlevant les 5 plus petites et 5 plus grandes valeurs)
+#6)la déviation absolue à la médiane
+#7)le minimum
+#8)le maximum
+#9)l’étendue (minimum-maximum)
+#10)le coefficient d’assiymétrie (skew=negative,zero,positive)
+#####negative skew: The left tail is longer(courbe ecartee a droite pas gauche)
+#####positive skew: The right tail is longer(courbe ecartee a gauche pas droite)
+#11)la Kurtosis (measure of the tailedness of a distribution)
+###They represent the probability or frequency of values that are extremely high
+###or low compared to the mean.
+###In other words, tails represent how often outliers occur.
+#a)Medium-tailed --> Outlier frequency=Medium --> Excess kurtosis=0 --> distribution=Normal
+#b)Thin-tailed --> Outlier frequency=Low --> Excess kurtosis=Negative --> distribution=Uniform
+#c)Fat-tailed --> Outlier frequency=High --> Excess kurtosis=Positive --> distribution=Laplace
+#12)le standard error.
+##par rapport au variable cuble "target"
+library(psych)
+describeBy(data, group=data$target)
+
+####--------------------------------------------------------------####
+####--------------------------------------------------------------####
+############## REPRESENTATION GRAPHIQUE (variable=AGE) ####################
+
+#####GRAPHE 1 : FOR "AGE" VARIABLE
+#METHODE 1:BAR PLOT
+library(ggplot2)
+ggplot(data, aes(x=reorder(age, age, function(x)-length(x)))) +
+  geom_bar(fill='gray') +  labs(x='AGE')
+
+####--------------------------------------------------------------####
+
+#METHODE 2:Histograme
+##tableau des effectifs de chaque classe.
+table_age<-table(data$age)
+##proportion
+#prop.table(table) permet d’obtenir les proportions au lieu des effectifs,
+#pour une table déjà calculée.
+prop.table(table_age)
+##Barplot
+#On peut représenter la table sous forme graphique avec un diagramme en bâtons 
+#(à ne pas confondre avec un histogramme !)
+barplot(table_age, main="Repartition of different Ages",
+        xlab="Different Age values",col='gray')
+
+####--------------------------------------------------------------####
+
+#####METHODE 3: HISTOGRAMME
+#3-1)Le premier, sans modifier le nombre de classes et en indiquant les effectifs: 
+hist(data$age, col = "gray", border = "white",main = 'AGE',
+     xlab = "price", ylab = "Effectifs",labels = TRUE)
+
+#3-2)Le second indique les fréquences relatives grâce à l’argument proba = TRUE  
+#nous permet de rajouter une ligne de densité. 
+#nous avons aussi changé le nombre de classes avec l’option nclass=x:
+hist(data$age, nclass=8, col = 'gray',border = "white",main = "AGE" ,
+     xlab = "Age range", ylab = "Densité",proba = TRUE)
+lines(density(data$age, na.rm = TRUE), lwd = 2, col ="black" )
+
+ggplot(data) +
+  aes(x = age) +
+  geom_density(adjust = 1.5) +
+  ggtitle("distribution d'age") +
+  xlab("les differents ages") +
+  ylab("Densité")
+
+#3-3)On peut être plus précis encore, pour aprécier la distribution en utilisant
+#les fonctions qqnorm() et qqline() :
+qqnorm(data$age) 
+qqline(data$age)
+
+####--------------------------------------------------------------####
+
+####METHODE 4 :Box plot 
+boxplot(data$age, main = "AGE",xlab = "Quantiles", ylab = "Age",
+        col = "gray", border = "black",horizontal = TRUE, notch = TRUE)
+
+####--------------------------------------------------------------####
+######### COMBINE THESE FIGURES IN 1 ##########
+library(ggplot2)
+library(gridExtra)
+
+# Create the individual plots
+plot1 <- ggplot(data, aes(x=reorder(age, age, function(x)-length(x)))) +
+  geom_bar(fill='gray') +  labs(x='AGE')
+
+plot2 <- ggplot(data) +
+  aes(x = age) +
+  geom_density(adjust = 1.5) +
+  ggtitle("distribution d'age") +
+  xlab("les differents ages") +
+  ylab("Densité")
+
+# Create a boxplot as a ggplot object
+plot3 <- ggplot(data, aes(x = "", y = age)) +
+  geom_boxplot(fill = 'gray') +
+  ggtitle("AGE") +
+  ylab("Age")
+
+# Convert the plots to grobs
+g1 <- ggplotGrob(plot1)
+g2 <- ggplotGrob(plot2)
+g3 <- ggplotGrob(plot3)
+
+# Arrange the grobs into a grid
+grid.arrange(g1, g2, g3, ncol = 3)
+
+
+
+####--------------------------------------------------------------####
+####--------------------------------------------------------------####
+############## REPRESENTATION GRAPHIQUE (variable=SEX) ####################
+
+#####GRAPHE 2 : FOR "SEX" VARIABLE
+#METHODE 1:BAR PLOT
+library(ggplot2)
+ggplot(data, aes(x=reorder(sex, sex, function(x)-length(x)))) +
+  geom_bar(fill='gray') +  labs(x='Gender')
+
+####--------------------------------------------------------------####
+
+#METHODE 2:Histograme
+##tableau des effectifs de chaque classe.
+table_sex<-table(data$sex)
+##proportion
+#prop.table(table) permet d’obtenir les proportions au lieu des effectifs,
+#pour une table déjà calculée.
+prop.table(table_sex)
+##Barplot
+#On peut représenter la table sous forme graphique avec un diagramme en bâtons 
+#(à ne pas confondre avec un histogramme !)
+barplot(table_sex, main="Repartition of Gender",
+        xlab="gender",col='gray')
+
+####--------------------------------------------------------------####
+
+#####METHODE 3: HISTOGRAMME
+#3-1)Le premier, sans modifier le nombre de classes et en indiquant les effectifs: 
+hist(data$sex, col = "gray", border = "white",main = 'GENDER',
+     xlab = "gender type", ylab = "Effectifs",labels = TRUE)
+
+#3-2)Le second indique les fréquences relatives grâce à l’argument proba = TRUE  
+#nous permet de rajouter une ligne de densité. 
+#nous avons aussi changé le nombre de classes avec l’option nclass=x:
+hist(data$sex, nclass=8, col = 'gray',border = "white",main = "SEX" ,
+     xlab = "gender type", ylab = "Densité",proba = TRUE)
+lines(density(data$sex, na.rm = TRUE), lwd = 2, col ="black" )
+
+
+#3-3)On peut être plus précis encore, pour aprécier la distribution en utilisant
+#les fonctions qqnorm() et qqline() :
+qqnorm(data$sex) 
+qqline(data$sex)
+
+####--------------------------------------------------------------####
+
+####METHODE 4 :Box plot 
+#NOTCH: Notches are used in box plots to help visually assess whether the medians
+#of distributions differ. If the notches do not overlap, this is evidence
+#that the medians are different.
+boxplot(data$sex, main = "GENDER",xlab = "Quantiles", ylab = "Age",
+        col = "gray", border = "black",horizontal = TRUE, notch = FALSE)
+
+####--------------------------------------------------------------####
+ ##### COMBINE THESE FIGURES IN 1 
+library(ggplot2)
+library(gridExtra)
+
+# Create the plots
+p1 <- ggplot(data, aes(x=age)) + 
+  geom_histogram(fill='gray', binwidth = 5) + 
+  labs(x='Age')
+
+p2 <- ggplot(data, aes(x=age, y=after_stat(density))) + 
+  geom_histogram(fill='gray', binwidth = 5) +
+  geom_density(alpha=.2, fill="#FF6666") + 
+  labs(x='Age')
+
+p3 <- ggplot(data, aes(x=sex)) + 
+  geom_histogram(aes(y=..density..), fill='gray', binwidth = 0.5) +
+  geom_density(alpha=.2, fill="#FF6666") +
+  labs(x='Gender', y='Density')
+
+p4 <- ggplot(data, aes(x=factor(sex), y=age)) + 
+  geom_boxplot(fill='gray', color='black', notch=TRUE) + 
+  labs(x='Gender', y='Age')
+
+# Convert plots to grobs
+g1 <- ggplotGrob(p1)
+g2 <- ggplotGrob(p2)
+g3 <- ggplotGrob(p3)
+g4 <- ggplotGrob(p4)
+
+# Set widths and heights for each plot
+widths <- unit.c(unit(0.4, "npc"), unit(0.3, "npc"), unit(0.3, "npc"))
+heights <- unit.c(unit(0.4, "npc"), unit(0.3, "npc"))
+
+# Arrange plots using grid.arrange
+grid.arrange(
+  arrangeGrob(g1, g2, ncol=2, widths=widths[1:2]),
+  arrangeGrob(g3, g4, ncol=2, widths=widths[2:3]),
+  heights=heights
+)
+
+
+
+
+####--------------------------------------------------------------####
+####--------------------------------------------------------------####
+############## REPRESENTATION GRAPHIQUE (variable=trestbps) ####################
+
+#####GRAPHE 4 : FOR "trestbps" VARIABLE
+#METHODE 1:BAR PLOT
+data=na.omit(d)
+library(ggplot2)
+ggplot(data, aes(x=reorder(trestbps, trestbps, function(x)-length(x)))) +
+  geom_bar(fill='gray') +  labs(x='Tension arterielle en mm Hg')
+
+####--------------------------------------------------------------####
+
+#METHODE 2:Histograme
+##tableau des effectifs de chaque classe.
+table_trestbps<-table(data$trestbps)
+##proportion
+#prop.table(table) permet d’obtenir les proportions au lieu des effectifs,
+#pour une table déjà calculée.
+prop.table(table_trestbps)
+##Barplot
+#On peut représenter la table sous forme graphique avec un diagramme en bâtons 
+#(à ne pas confondre avec un histogramme !)
+barplot(table_trestbps, main="Repartition of resting blood pressure",
+        xlab="blodd pressure in mm Hg",col='gray')
+
+####--------------------------------------------------------------####
+
+#####METHODE 3: HISTOGRAMME
+#3-1)Le premier, sans modifier le nombre de classes et en indiquant les effectifs: 
+hist(data$trestbps, col = "gray", border = "white",main = 'Repartition of resting blood pressure',
+     xlab = "blood pressure in mm Hg", ylab = "Effectifs",labels = TRUE)
+
+#3-2)Le second indique les fréquences relatives grâce à l’argument proba = TRUE  
+#nous permet de rajouter une ligne de densité. 
+#nous avons aussi changé le nombre de classes avec l’option nclass=x:
+hist(data$trestbps, nclass=8, col = 'gray',border = "white",main = "Repartition of restong blood presure" ,
+     xlab = "blood pressure in mm Hg", ylab = "Densité",proba = TRUE)
+lines(density(data$trestbps, na.rm = TRUE), lwd = 2, col ="black" )
+
+ggplot(data) +
+  aes(x = trestbps) +
+  geom_density(adjust = 1.5) +
+  ggtitle("distribution de cp") +
+  xlab("les differents types de douleur thoracique") +
+  ylab("Densité")
+
+
+#3-3)On peut être plus précis encore, pour aprécier la distribution en utilisant
+#les fonctions qqnorm() et qqline() :
+qqnorm(data$trestbps) 
+qqline(data$trestbps)
+
+####--------------------------------------------------------------####
+
+####METHODE 4 :Box plot 
+boxplot(data$trestbps, main = "Resting Blood Pressure",xlab = "Quantiles", ylab = "blood pressure in mm Hg",
+        col = "gray", border = "black",horizontal = TRUE, notch = TRUE)
+
+####--------------------------------------------------------------####
+###### COMBINE THESE FIGURES IN 1
+library(gridExtra)
+library(ggplot2)
+library(ggpubr)
+
+# Bar plot
+barplot_bp <- ggplot(data, aes(x = reorder(trestbps, trestbps, function(x) -length(x)))) +
+  geom_bar(fill = 'gray') + labs(x = 'Tension arterielle en mm Hg')
+barplot_grob <- ggplotGrob(barplot_bp)
+
+# Histogramme 1
+hist_bp1 <- ggplot(data, aes(x = trestbps)) +
+  geom_histogram(binwidth = 10, col = 'gray', fill = 'gray', boundary = 0, alpha = 0.5) +
+  labs(title = "Repartition of resting blood pressure", x = "blood pressure in mm Hg", y = "Effectifs")
+hist_bp1_grob <- ggplotGrob(hist_bp1)
+
+# Histogramme 2
+hist_bp2 <- ggplot(data, aes(x = trestbps)) +
+  geom_histogram(binwidth = 8, col = 'gray', fill = 'gray', boundary = 0, alpha = 0.5) +
+  labs(title = "Repartition of resting blood pressure", x = "blood pressure in mm Hg", y = "Densité")
+hist_bp2 <- hist_bp2 + stat_density(aes(y = ..density..), color = "black", size = 1, alpha = 0.5)
+hist_bp2_grob <- ggplotGrob(hist_bp2)
+
+# Box plot
+boxplot_bp <- ggboxplot(data, x = "trestbps", y = "age", color = "gray", fill = "gray", 
+                        ylab = "age", xlab = "blood pressure in mm Hg", add = "jitter")
+boxplot_grob <- ggplotGrob(boxplot_bp)
+
+# Grid arrangement
+grid.arrange(barplot_grob, hist_bp1_grob, hist_bp2_grob, boxplot_grob, nrow = 2, ncol = 2)
+
+
+####--------------------------------------------------------------####
+####--------------------------------------------------------------####
+############## REPRESENTATION GRAPHIQUE (variable=chol) ####################
+
+#####GRAPHE 4 : FOR "CHOL" VARIABLE
+#METHODE 1:BAR PLOT
+library(ggplot2)
+ggplot(data, aes(x=reorder(chol, chol, function(x)-length(x)))) +
+  geom_bar(fill='gray') +  labs(x='serum cholesterol in mg/dl')
+
+####--------------------------------------------------------------####
+
+#METHODE 2:Histograme
+##tableau des effectifs de chaque classe.
+table_chol<-table(data$chol)
+##proportion
+#prop.table(table) permet d’obtenir les proportions au lieu des effectifs,
+#pour une table déjà calculée.
+prop.table(table_chol)
+##Barplot
+#On peut représenter la table sous forme graphique avec un diagramme en bâtons 
+#(à ne pas confondre avec un histogramme !)
+barplot(table_chol, main="serum cholesterol in mg/dl",
+        xlab="cholesterol in mg/dl",col='gray')
+
+####--------------------------------------------------------------####
+
+#####METHODE 3: HISTOGRAMME
+#3-1)Le premier, sans modifier le nombre de classes et en indiquant les effectifs: 
+hist(data$chol, col = "gray", border = "white",main = 'serum cholesterol in mg/dl',
+     xlab = "serum cholesterol in mgldl", ylab = "Effectifs",labels = TRUE)
+
+#3-2)Le second indique les fréquences relatives grâce à l’argument proba = TRUE  
+#nous permet de rajouter une ligne de densité. 
+#nous avons aussi changé le nombre de classes avec l’option nclass=x:
+hist(data$chol, nclass=8, col = 'gray',border = "white",main = "serum cholesterol in mg/dl" ,
+     xlab = "cholesterol in mm Hg", ylab = "Densité",proba = TRUE)
+lines(density(data$chol, na.rm = TRUE), lwd = 2, col ="black" )
+
+ggplot(data) +
+  aes(x = chol) +
+  geom_density(adjust = 1.5) +
+  ggtitle("distribution de cholesterol") +
+  xlab("les differents valeurs de cholesterol") +
+  ylab("Densité")
+
+
+#3-3)On peut être plus précis encore, pour aprécier la distribution en utilisant
+#les fonctions qqnorm() et qqline() :
+qqnorm(data$chol) 
+qqline(data$chol)
+
+####--------------------------------------------------------------####
+
+####METHODE 4 :Box plot 
+boxplot(data$chol, main = "serum cholesterol in mg/dl",xlab = "Quantiles", ylab = "serum cholesterol",
+        col = "gray", border = "black",horizontal = TRUE, notch = TRUE)
+
+####--------------------------------------------------------------####
+##### COMBINE THESE FIGURES IN 1
+library(ggplot2)
+
+# create a data frame with the cholesterol data
+df <- data.frame(chol = data$chol)
+
+# create a histogram with density plot and box plot
+ggplot(df, aes(x = chol)) +
+  geom_histogram(aes(y = ..density..), color = "black", fill = "gray", binwidth = 10) +
+  geom_density(alpha = .2, fill = "#FF6666") +
+  labs(x = "serum cholesterol in mg/dl", y = "Density") +
+  ggtitle("Distribution of serum cholesterol") +
+  theme_bw()
+
+
+
+
+####--------------------------------------------------------------####
+####--------------------------------------------------------------####
+############## REPRESENTATION GRAPHIQUE (variable=CP) ####################
+
+#####GRAPHE 5 : FOR "CP" VARIABLE
+#METHODE 1:BAR PLOT
+library(ggplot2)
+ggplot(data, aes(x=reorder(cp, cp, function(x)-length(x)))) +
+  geom_bar(fill='gray') +  labs(x='type de douleur thoracique')
+
+####--------------------------------------------------------------####
+
+#METHODE 2:Histograme
+##tableau des effectifs de chaque classe.
+table_cp<-table(data$cp)
+##proportion
+#prop.table(table) permet d’obtenir les proportions au lieu des effectifs,
+#pour une table déjà calculée.
+prop.table(table_cp)
+##Barplot
+#On peut représenter la table sous forme graphique avec un diagramme en bâtons 
+#(à ne pas confondre avec un histogramme !)
+barplot(table_cp, main="Repartition of chest pain types",
+        xlab="gender",col='gray')
+
+####--------------------------------------------------------------####
+
+#####METHODE 3: HISTOGRAMME
+#3-1)Le premier, sans modifier le nombre de classes et en indiquant les effectifs: 
+hist(data$cp, col = "gray", border = "white",main = 'Repartition of chest pain types',
+     xlab = "types of chest pain", ylab = "Effectifs",labels = TRUE)
+
+#3-2)Le second indique les fréquences relatives grâce à l’argument proba = TRUE  
+#nous permet de rajouter une ligne de densité. 
+#nous avons aussi changé le nombre de classes avec l’option nclass=x:
+hist(data$cp, nclass=8, col = 'gray',border = "white",main = "Repartition of chest pain types" ,
+     xlab = "types of chest pain", ylab = "Densité",proba = TRUE)
+lines(density(data$age, na.rm = TRUE), lwd = 2, col ="black" )
+
+ggplot(data) +
+  aes(x = cp) +
+  geom_density(adjust = 1.5) +
+  ggtitle("distribution de cp") +
+  xlab("les differents types de douleur thoracique") +
+  ylab("Densité")
+
+
+#3-3)On peut être plus précis encore, pour aprécier la distribution en utilisant
+#les fonctions qqnorm() et qqline() :
+qqnorm(data$cp) 
+qqline(data$cp)
+
+####--------------------------------------------------------------####
+
+####METHODE 4 :Box plot 
+boxplot(data$cp, main = "GENDER",xlab = "Quantiles", ylab = "douleur thoracique",
+        col = "gray", border = "black",horizontal = TRUE, notch = TRUE)
+
+####--------------------------------------------------------------####
+###### COMBINE THESE FIGURES IN 1
+library(ggplot2)
+library(gridExtra)
+
+# Bar plot
+barplot_cp <- ggplot(data, aes(x=reorder(cp, cp, function(x)-length(x)))) +
+  geom_bar(fill='gray') +  labs(x='Type of chest pain')
+
+# Histogram 1
+histogram1_cp <- ggplot() +
+  geom_histogram(data = data, aes(x = cp), bins = 5, fill = "gray", 
+                 col = "white") +
+  labs(title = "Repartition of chest pain types", x = "Types of chest pain",
+       y = "Effectifs")
+
+# Histogram 2
+histogram2_cp <- ggplot() +
+  geom_histogram(data = data, aes(x = cp), bins = 5, fill = "gray", 
+                 col = "white", alpha = .5) +
+  geom_density(data = data, aes(x = cp, y = ..density..), 
+               colour = "black", size = 1) +
+  labs(title = "Repartition of chest pain types", x = "Types of chest pain",
+       y = "Density")
+
+# Density plot
+density_cp <- ggplot(data) +
+  aes(x = cp) +
+  geom_density(adjust = 1.5, fill = "gray") +
+  labs(title = "Distribution of chest pain types", x = "Types of chest pain",
+       y = "Density")
+
+# Box plot
+boxplot_cp <- ggplot(data, aes(x = "", y = cp)) +
+  geom_boxplot(fill = "gray", colour = "black") +
+  labs(title = "Chest Pain Types", x = "", y = "Chest pain")
+
+# Combine plots
+grid.arrange(barplot_cp, histogram1_cp, histogram2_cp, density_cp, boxplot_cp, ncol=5)
+
+
+
+####--------------------------------------------------------------####
+####--------------------------------------------------------------####
+############## REPRESENTATION GRAPHIQUE (variable=fbs) ####################
+
+#####GRAPHE 6 : FOR "fbs" VARIABLE
+#METHODE 1:BAR PLOT
+library(ggplot2)
+ggplot(data, aes(x=reorder(fbs, fbs, function(x)-length(x)))) +
+  geom_bar(fill='gray') +  labs(x='Fastin blood glucose > 120 mg/dl')
+
+####--------------------------------------------------------------####
+
+#METHODE 2:Histograme
+##tableau des effectifs de chaque classe.
+table_fbs<-table(data$fbs)
+##proportion
+#prop.table(table) permet d’obtenir les proportions au lieu des effectifs,
+#pour une table déjà calculée.
+prop.table(table_fbs)
+##Barplot
+#On peut représenter la table sous forme graphique avec un diagramme en bâtons 
+#(à ne pas confondre avec un histogramme !)
+barplot(table_fbs, main="Repartition of Fastin blood glucose > 120 mg/dl",
+        xlab="blood glucose",col='gray')
+
+####--------------------------------------------------------------####
+
+#####METHODE 3: HISTOGRAMME
+#3-1)Le premier, sans modifier le nombre de classes et en indiquant les effectifs: 
+hist(data$fbs, col = "gray", border = "white",main = 'Fastin blood glucose > 120 mg/dl',
+     xlab = "blood glucose", ylab = "Effectifs",labels = TRUE)
+
+#3-2)Le second indique les fréquences relatives grâce à l’argument proba = TRUE  
+#nous permet de rajouter une ligne de densité. 
+#nous avons aussi changé le nombre de classes avec l’option nclass=x:
+hist(data$fbs, nclass=8, col = 'gray',border = "white",main = "Fastin blood glucose > 120 mg/dl" ,
+     xlab = "blood glucose", ylab = "Densité",proba = TRUE)
+lines(density(data$fbs, na.rm = TRUE), lwd = 2, col ="black" )
+
+ggplot(data) +
+  aes(x = fbs) +
+  geom_density(adjust = 1.5) +
+  ggtitle("distribution de glycemine") +
+  xlab("Fastin blood glucose > 120 mg/dl") +
+  ylab("Densité")
+
+
+#3-3)On peut être plus précis encore, pour aprécier la distribution en utilisant
+#les fonctions qqnorm() et qqline() :
+qqnorm(data$fbs) 
+qqline(data$fbs)
+
+####--------------------------------------------------------------####
+
+####METHODE 4 :Box plot 
+boxplot(data$fbs, main = "Fastin blood glucose > 120 mg/dl",xlab = "Quantiles", ylab = "blood glucose",
+        col = "gray", border = "black",horizontal = TRUE, notch = TRUE)
+
+####--------------------------------------------------------------####
+
+
+
+####--------------------------------------------------------------####
+####--------------------------------------------------------------####
+############## REPRESENTATION GRAPHIQUE (variable=thalach) ####################
+
+#####GRAPHE 7 : FOR "THALACH" VARIABLE
+#METHODE 1:BAR PLOT
+library(ggplot2)
+ggplot(data, aes(x=reorder(thalach, thalach, function(x)-length(x)))) +
+  geom_bar(fill='gray') +  labs(x='Maximum heart rate reached')
+
+####--------------------------------------------------------------####
+
+#METHODE 2:Histograme
+##tableau des effectifs de chaque classe.
+table_thalach<-table(data$thalach)
+##proportion
+#prop.table(table) permet d’obtenir les proportions au lieu des effectifs,
+#pour une table déjà calculée.
+prop.table(table_thalach)
+##Barplot
+#On peut représenter la table sous forme graphique avec un diagramme en bâtons 
+#(à ne pas confondre avec un histogramme !)
+barplot(table_restecg, main="Maximum heart rate reached",
+        xlab="Maximum heart rate",col='gray')
+
+####--------------------------------------------------------------####
+
+#####METHODE 3: HISTOGRAMME
+#3-1)Le premier, sans modifier le nombre de classes et en indiquant les effectifs: 
+hist(data$thalach, col = "gray", border = "white",main = 'Maximum heart rate reached',
+     xlab = "Maximum heart rate", ylab = "Effectifs",labels = TRUE)
+
+#3-2)Le second indique les fréquences relatives grâce à l’argument proba = TRUE  
+#nous permet de rajouter une ligne de densité. 
+#nous avons aussi changé le nombre de classes avec l’option nclass=x:
+hist(data$thalach, nclass=8, col = 'gray',border = "white",main = "Maximum heart rate reached" ,
+     xlab = "Maximum heart rate", ylab = "Densité",proba = TRUE)
+lines(density(data$thalach, na.rm = TRUE), lwd = 2, col ="black" )
+
+ggplot(data) +
+  aes(x = thalach) +
+  geom_density(adjust = 1.5) +
+  ggtitle("distribution de la frequence cardiaque maximale atteinte") +
+  xlab("frequence cardiaque maximal") +
+  ylab("Densité")
+
+
+#3-3)On peut être plus précis encore, pour aprécier la distribution en utilisant
+#les fonctions qqnorm() et qqline() :
+qqnorm(data$thalach) 
+qqline(data$thalach)
+
+####--------------------------------------------------------------####
+
+####METHODE 4 :Box plot 
+boxplot(data$thalach, main = "Maximum heart rate reached",xlab = "Quantiles",
+        ylab = "Maximum heart rate",
+        col = "gray", border = "black",horizontal = TRUE, notch = TRUE)
+
+####--------------------------------------------------------------####
+#### COMBINE THE RESULT
+library(ggplot2)
+library(ggpubr)
+
+# Create the bar plot
+p1 <- ggplot(data, aes(x = reorder(thalach, thalach, function(x) -length(x)))) +
+  geom_bar(fill = 'gray') + labs(x = 'Maximum heart rate reached')
+
+# Create the histogram
+p2 <- ggplot(data, aes(x = thalach)) +
+  geom_histogram(binwidth = 5, fill = "gray", color = "white") + 
+  labs(x = "Maximum heart rate", y = "Frequency")
+
+# Combine the plots using ggarrange
+ggarrange(p1, p2, ncol = 2, nrow = 1)
+
+
+
+
+####--------------------------------------------------------------####
+####--------------------------------------------------------------####
+############## REPRESENTATION GRAPHIQUE (variable=exang) ####################
+
+#####GRAPHE 8 : FOR "exang" VARIABLE
+#METHODE 1:BAR PLOT
+library(ggplot2)
+ggplot(data, aes(x=reorder(exang, exang, function(x)-length(x)))) +
+  geom_bar(fill='gray') +  labs(x="Angine de poitrine nduite par l'effort" )
+
+####--------------------------------------------------------------####
+
+#METHODE 2:Histograme
+##tableau des effectifs de chaque classe.
+table_exang<-table(data$exang)
+##proportion
+#prop.table(table) permet d’obtenir les proportions au lieu des effectifs,
+#pour une table déjà calculée.
+prop.table(table_exang)
+##Barplot
+#On peut représenter la table sous forme graphique avec un diagramme en bâtons 
+#(à ne pas confondre avec un histogramme !)
+barplot(table_exang, main="Angine de poitrine nduite par l'effort",
+        xlab="Angine de poitrine",col='gray')
+
+####--------------------------------------------------------------####
+
+#####METHODE 3: HISTOGRAMME
+#3-1)Le premier, sans modifier le nombre de classes et en indiquant les effectifs: 
+hist(data$exang, col = "gray", border = "white",main = "Angine de poitrine nduite par l'effort",
+     xlab = "Angine de poitrine ", ylab = "Effectifs",labels = TRUE)
+
+#3-2)Le second indique les fréquences relatives grâce à l’argument proba = TRUE  
+#nous permet de rajouter une ligne de densité. 
+#nous avons aussi changé le nombre de classes avec l’option nclass=x:
+hist(data$exang, nclass=8, col = 'gray',border = "white",main = "Angine de poitrine nduite par l'effort" ,
+     xlab = "Angine de poitrine", ylab = "Densité",proba = TRUE)
+lines(density(data$exang, na.rm = TRUE), lwd = 2, col ="black" )
+
+ggplot(data) +
+  aes(x = exang) +
+  geom_density(adjust = 1.5) +
+  ggtitle("distribution d'angine de poitrine iduite par l'effort") +
+  xlab("angine de puitrine") +
+  ylab("Densité")
+
+
+#3-3)On peut être plus précis encore, pour aprécier la distribution en utilisant
+#les fonctions qqnorm() et qqline() :
+qqnorm(data$exang) 
+qqline(data$exang)
+
+####--------------------------------------------------------------####
+
+####METHODE 4 :Box plot 
+boxplot(data$exang, main = "Angine de poitrine nduite par l'effort",xlab = "Quantiles",
+  ylab ="Angine de poitrine nduitet",col = "gray", border = "black",horizontal = TRUE, notch = FALSE)
+
+####--------------------------------------------------------------####
+### COMBINE THE RESULT
+library(ggplot2)
+library(patchwork)
+
+# Create boxplot
+p_box <- ggplot(data, aes(y = exang, x = "", fill = factor(exang))) +
+  geom_boxplot() +
+  scale_fill_grey(name = "Angine de poitrine\ninduite par l'effort", labels = c("Non", "Oui")) +
+  theme(legend.position = "bottom", legend.title.align = 0.5, legend.text.align = 0.5,
+        plot.title = element_text(hjust = 0.5)) +
+  labs(title = "Boxplot", x = NULL, y = "Angine de poitrine induite")
+
+# Create barplot
+p_bar <- ggplot(data, aes(x = factor(exang), fill = factor(exang))) +
+  geom_bar() +
+  scale_fill_grey(name = "Angine de poitrine\ninduite par l'effort", labels = c("Non", "Oui")) +
+  theme(legend.position = "bottom", legend.title.align = 0.5, legend.text.align = 0.5,
+        plot.title = element_text(hjust = 0.5)) +
+  labs(title = "Barplot", x = NULL, y = "Count")
+
+# Combine the plots using patchwork
+p_box + p_bar + plot_layout(ncol = 2)
+
+
+
+
+
+####--------------------------------------------------------------####
+####--------------------------------------------------------------####
+############## REPRESENTATION GRAPHIQUE (variable=restecg) ####################
+
+#####GRAPHE 9 : FOR "restecg" VARIABLE
+#METHODE 1:BAR PLOT
+library(ggplot2)
+ggplot(data, aes(x=reorder(restecg, restecg, function(x)-length(x)))) +
+  geom_bar(fill='gray') +  labs(x='Electrocardiographic result at rest')
+
+####--------------------------------------------------------------####
+
+#METHODE 2:Histograme
+##tableau des effectifs de chaque classe.
+table_restecg<-table(data$restecg)
+##proportion
+#prop.table(table) permet d’obtenir les proportions au lieu des effectifs,
+#pour une table déjà calculée.
+prop.table(table_restecg)
+##Barplot
+#On peut représenter la table sous forme graphique avec un diagramme en bâtons 
+#(à ne pas confondre avec un histogramme !)
+barplot(table_restecg, main="Electrocardiographic result at rest",
+        xlab="electrocardiograpgie result",col='gray')
+
+####--------------------------------------------------------------####
+
+#####METHODE 3: HISTOGRAMME
+#3-1)Le premier, sans modifier le nombre de classes et en indiquant les effectifs: 
+hist(data$restecg, col = "gray", border = "white",main = 'Electrocardiographic result at rest',
+     xlab = "Electrocardiographic result", ylab = "Effectifs",labels = TRUE)
+
+#3-2)Le second indique les fréquences relatives grâce à l’argument proba = TRUE  
+#nous permet de rajouter une ligne de densité. 
+#nous avons aussi changé le nombre de classes avec l’option nclass=x:
+hist(data$restecg, nclass=8, col = 'gray',border = "white",main = "Electrocardiographic result at rest" ,
+     xlab = "Electrocardiographic result", ylab = "Densité",proba = TRUE)
+lines(density(data$restecg, na.rm = TRUE), lwd = 2, col ="black" )
+
+ggplot(data) +
+  aes(x = restecg) +
+  geom_density(adjust = 1.5) +
+  ggtitle("distribution d'electrocardiographique au repos") +
+  xlab("Electrocardiographic result") +
+  ylab("Densité")
+
+
+#3-3)On peut être plus précis encore, pour aprécier la distribution en utilisant
+#les fonctions qqnorm() et qqline() :
+qqnorm(data$restecg) 
+qqline(data$restecg)
+
+####--------------------------------------------------------------####
+
+####METHODE 4 :Box plot 
+boxplot(data$restecg, main = "Electrocardiographic result at rest",xlab = "Quantiles",
+        ylab = "Electrocardiographic result",
+        col = "gray", border = "black",horizontal = TRUE, notch = FALSE)
+
+####--------------------------------------------------------------####
+#### COMBINE THE RESULTS
+library(ggplot2)
+library(patchwork)
+
+# create the plots
+plot1 <- ggplot(data, aes(x=reorder(restecg, restecg, function(x)-length(x)))) +
+  geom_bar(fill='gray') +  labs(x='Electrocardiographic result at rest')
+
+plot2 <- ggplot(data, aes(y = restecg)) + 
+  geom_boxplot(fill = 'gray', color = 'black') +
+  labs(x = "Electrocardiographic result at rest", y = "Electrocardiographic result")
+
+# combine the plots using patchwork
+plot1 + plot2
+
+
+
+####--------------------------------------------------------------####
+####--------------------------------------------------------------####
+############## REPRESENTATION GRAPHIQUE (variable=slope) ####################
+
+#####GRAPHE 10 : FOR "slope" VARIABLE
+#METHODE 1:BAR PLOT
+library(ggplot2)
+ggplot(data, aes(x=reorder(slope, slope, function(x)-length(x)))) +
+  geom_bar(fill='gray') +  labs(x="La pente du segment ST d'exercice maximal")
+
+####--------------------------------------------------------------####
+
+#METHODE 2:Histograme
+##tableau des effectifs de chaque classe.
+table_slope<-table(data$slope)
+##proportion
+#prop.table(table) permet d’obtenir les proportions au lieu des effectifs,
+#pour une table déjà calculée.
+prop.table(table_slope)
+##Barplot
+#On peut représenter la table sous forme graphique avec un diagramme en bâtons 
+#(à ne pas confondre avec un histogramme !)
+barplot(table_slope, main="La pente du segment ST d'exercice maximal",
+        xlab="slope values",col='gray')
+
+####--------------------------------------------------------------####
+
+#####METHODE 3: HISTOGRAMME
+#3-1)Le premier, sans modifier le nombre de classes et en indiquant les effectifs: 
+hist(data$slope, col = "gray", border = "white",main = "La pente du segment ST d'exercice maximal",
+     xlab = "slope values", ylab = "Effectifs",labels = TRUE)
+
+#3-2)Le second indique les fréquences relatives grâce à l’argument proba = TRUE  
+#nous permet de rajouter une ligne de densité. 
+#nous avons aussi changé le nombre de classes avec l’option nclass=x:
+hist(data$slope, nclass=8, col = 'gray',border = "white",main = "La pente du segment ST d'exercice maximal" ,
+     xlab = "slope values ", ylab = "Densité",proba = TRUE)
+lines(density(data$slope, na.rm = TRUE), lwd = 2, col ="black" )
+
+ggplot(data) +
+  aes(x = slope) +
+  geom_density(adjust = 1.5) +
+  ggtitle("distribution de La pente du segment ST d'exercice maximal") +
+  xlab("slope values") +
+  ylab("Densité")
+
+
+#3-3)On peut être plus précis encore, pour aprécier la distribution en utilisant
+#les fonctions qqnorm() et qqline() :
+qqnorm(data$slope) 
+qqline(data$slope)
+
+####--------------------------------------------------------------####
+
+####METHODE 4 :Box plot 
+boxplot(data$slope, main = "La pente du segment ST d'exercice maximal",xlab = "Quantiles",
+        ylab = "slope values",
+        col = "gray", border = "black",horizontal = TRUE, notch = FALSE)
+
+####--------------------------------------------------------------####
+############ COMBINE THE RESULT
+library(ggplot2)
+# Create the bar plot
+plot1 <- ggplot(data, aes(x = reorder(slope, slope, function(x) -length(x)))) +
+  geom_bar(fill = 'gray') +  
+  labs(x = "La pente du segment ST d'exercice maximal")
+# Create the box plot
+plot2 <- ggplot(data, aes(x = "")) +
+  geom_boxplot(aes(y = slope),
+               fill = 'gray', 
+               colour = "black",
+               notch = FALSE) +
+  labs(x = "Quantiles", y = "slope values",
+       title = "La pente du segment ST d'exercice maximal")
+# Combine the plots using patchwork
+library(patchwork)
+plot1 + plot2
+
+
+
+####--------------------------------------------------------------####
+####--------------------------------------------------------------####
+############## REPRESENTATION GRAPHIQUE (variable=oldpeak) ####################
+
+#####GRAPHE 11 : FOR "oldpeak" VARIABLE
+#METHODE 1:BAR PLOT
+library(ggplot2)
+ggplot(data, aes(x=reorder(oldpeak, oldpeak, function(x)-length(x)))) +
+  geom_bar(fill='gray') +  labs(x="Dépression ST induite par l'exercice par rapport au repos")
+
+####--------------------------------------------------------------####
+
+#METHODE 2:Histograme
+##tableau des effectifs de chaque classe.
+table_oldpeak<-table(data$oldpeak)
+##proportion
+#prop.table(table) permet d’obtenir les proportions au lieu des effectifs,
+#pour une table déjà calculée.
+prop.table(table_oldpeak)
+##Barplot
+#On peut représenter la table sous forme graphique avec un diagramme en bâtons 
+#(à ne pas confondre avec un histogramme !)
+barplot(table_oldpeak, main="Dépression ST induite par l'exercice par rapport au repos",
+        xlab="Dépression ST",col='gray')
+
+####--------------------------------------------------------------####
+
+#####METHODE 3: HISTOGRAMME
+#3-1)Le premier, sans modifier le nombre de classes et en indiquant les effectifs: 
+hist(data$oldpeak, col = "gray", border = "white",main = "Dépression ST induite par l'exercice par rapport au repos",
+     xlab = "Dépression ST induite", ylab = "Effectifs",labels = TRUE)
+
+#3-2)Le second indique les fréquences relatives grâce à l’argument proba = TRUE  
+#nous permet de rajouter une ligne de densité. 
+#nous avons aussi changé le nombre de classes avec l’option nclass=x:
+hist(data$oldpeak, nclass=8, col = 'gray',border = "white",main = "Dépression ST induite par l'exercice par rapport au repos" ,
+     xlab = "Dépression ST ", ylab = "Densité",proba = TRUE)
+lines(density(data$oldpeak, na.rm = TRUE), lwd = 2, col ="black" )
+
+ggplot(data) +
+  aes(x = oldpeak) +
+  geom_density(adjust = 1.5) +
+  ggtitle("distribution de la depression ST induite pa l'exercice au repos") +
+  xlab("Dépression ST") +
+  ylab("Densité")
+
+
+#3-3)On peut être plus précis encore, pour aprécier la distribution en utilisant
+#les fonctions qqnorm() et qqline() :
+qqnorm(data$oldpeak) 
+qqline(data$oldpeak)
+
+####--------------------------------------------------------------####
+
+####METHODE 4 :Box plot 
+boxplot(data$oldpeak, main = "Dépression ST induite par l'exercice par rapport au repos",xlab = "Quantiles",
+        ylab = "Dépression ST",
+        col = "gray", border = "black",horizontal = TRUE, notch = TRUE)
+
+####--------------------------------------------------------------####
+
+
+####--------------------------------------------------------------####
+####--------------------------------------------------------------####
+############## REPRESENTATION GRAPHIQUE (variable=CA) ####################
+
+#####GRAPHE 12 : FOR "CA" VARIABLE
+#METHODE 1:BAR PLOT
+library(ggplot2)
+ggplot(data, aes(x=reorder(ca, ca, function(x)-length(x)))) +
+  geom_bar(fill='gray') +  labs(x="Nombre de vaisseaux principaux")
+
+####--------------------------------------------------------------####
+
+#METHODE 2:Histograme
+##tableau des effectifs de chaque classe.
+table_ca<-table(data$ca)
+##proportion
+#prop.table(table) permet d’obtenir les proportions au lieu des effectifs,
+#pour une table déjà calculée.
+prop.table(table_ca)
+##Barplot
+#On peut représenter la table sous forme graphique avec un diagramme en bâtons 
+#(à ne pas confondre avec un histogramme !)
+barplot(table_ca, main="Nombre de vaisseaux principaux",
+        xlab="Nombre de vaisseaux",col='gray')
+
+####--------------------------------------------------------------####
+
+#####METHODE 3: HISTOGRAMME
+#3-1)Le premier, sans modifier le nombre de classes et en indiquant les effectifs: 
+hist(data$ca, col = "gray", border = "white",main = "Nombre de vaisseaux principaux",
+     xlab = "Nombre de vaisseaux", ylab = "Effectifs",labels = TRUE)
+
+#3-2)Le second indique les fréquences relatives grâce à l’argument proba = TRUE  
+#nous permet de rajouter une ligne de densité. 
+#nous avons aussi changé le nombre de classes avec l’option nclass=x:
+hist(data$ca, nclass=8, col = 'gray',border = "white",main = "Nombre de vaisseaux principaux" ,
+     xlab = "Nombre de vaisseaux ", ylab = "Densité",proba = TRUE)
+lines(density(data$ca, na.rm = TRUE), lwd = 2, col ="black" )
+
+ggplot(data) +
+  aes(x = ca) +
+  geom_density(adjust = 1.5) +
+  ggtitle("distribution de Nombre de vaisseaux principaux") +
+  xlab("Nombre de vaisseaux") +
+  ylab("Densité")
+
+
+#3-3)On peut être plus précis encore, pour aprécier la distribution en utilisant
+#les fonctions qqnorm() et qqline() :
+qqnorm(data$ca) 
+qqline(data$ca)
+
+####--------------------------------------------------------------####
+
+####METHODE 4 :Box plot 
+boxplot(data$ca, main = "Nombre de vaisseaux principaux",xlab = "Quantiles",
+        ylab = "Nombre de vaisseaux",
+        col = "gray", border = "black",horizontal = TRUE, notch = FALSE)
+
+####--------------------------------------------------------------####
+
+
+####--------------------------------------------------------------####
+####--------------------------------------------------------------####
+############## REPRESENTATION GRAPHIQUE (variable=THAL) ####################
+
+#####GRAPHE 12 : FOR "CA" VARIABLE
+#METHODE 1:BAR PLOT
+library(ggplot2)
+ggplot(data, aes(x=reorder(thal, thal, function(x)-length(x)))) +
+  geom_bar(fill='gray') +  labs(x="thalassémie")
+
+####--------------------------------------------------------------####
+
+#METHODE 2:Histograme
+##tableau des effectifs de chaque classe.
+table_thal<-table(data$thal)
+##proportion
+#prop.table(table) permet d’obtenir les proportions au lieu des effectifs,
+#pour une table déjà calculée.
+prop.table(table_thal)
+##Barplot
+#On peut représenter la table sous forme graphique avec un diagramme en bâtons 
+#(à ne pas confondre avec un histogramme !)
+barplot(table_thal, main="thalassémie",
+        xlab="thalassémie level",col='gray')
+
+####--------------------------------------------------------------####
+
+#####METHODE 3: HISTOGRAMME
+#3-1)Le premier, sans modifier le nombre de classes et en indiquant les effectifs: 
+hist(data$thal, col = "gray", border = "white",main = "thalassémie",
+     xlab = "thalassémie level", ylab = "Effectifs",labels = TRUE)
+
+#3-2)Le second indique les fréquences relatives grâce à l’argument proba = TRUE  
+#nous permet de rajouter une ligne de densité. 
+#nous avons aussi changé le nombre de classes avec l’option nclass=x:
+hist(data$thal, nclass=8, col = 'gray',border = "white",main = "thalassémie" ,
+     xlab = "thalassémie level ", ylab = "Densité",proba = TRUE)
+lines(density(data$thal, na.rm = TRUE), lwd = 2, col ="black" )
+
+ggplot(data) +
+  aes(x = thal) +
+  geom_density(adjust = 1.5) +
+  ggtitle("distribution de thalassémie") +
+  xlab("thalassémie level") +
+  ylab("Densité")
+
+
+#3-3)On peut être plus précis encore, pour aprécier la distribution en utilisant
+#les fonctions qqnorm() et qqline() :
+qqnorm(data$thal) 
+qqline(data$thal)
+
+####--------------------------------------------------------------####
+
+####METHODE 4 :Box plot 
+boxplot(data$thal, main = "Nombre de vaisseaux principaux",xlab = "Quantiles",
+        ylab = "Nombre de vaisseaux",
+        col = "gray", border = "black",horizontal = TRUE, notch = FALSE)
+
+####--------------------------------------------------------------####
+##### COMBINE THE RESULT 
+library(ggplot2)
+library(gridExtra)
+
+# Create ggplot bar plot
+p1 <- ggplot(data, aes(x = reorder(thal, thal, function(x) - length(x)))) +
+  geom_bar(fill = 'gray') +
+  labs(x = "thalassémie")
+
+# Create base R boxplot and convert to ggplot object
+p2 <- ggplot(data, aes(x = "")) + 
+  geom_boxplot(aes(y = thal), fill = 'gray', color = 'black') +
+  labs(title = "thalassémie", x = "Quantiles", y = "Nombre de vaisseaux")
+
+# Convert plots to graphical objects
+g1 <- ggplotGrob(p1)
+g2 <- ggplotGrob(p2)
+
+# Combine the two plots into one figure
+grid.arrange(g1, g2, nrow = 1)
+
+
+
+
+###############################################################################
+############################################################################### 
+
+############ STEP 4: DIVISER LA BASE DE DONNEE ##########################
+# decoupage de la base de donnee en apprentissage (70%) et test (30%)
+#AVANT le decoupage on va transformer la variable cible "target" en facteur
+data$target=as.factor(data$target) 
+###1st: creer la partition
+library(caret)
+set.seed(34)
+parts = createDataPartition(data$target, p =0.7, list = F)
+###2nd:creer la partie apprentissage
+train = data[parts, ]
+head(parts)
+###3rd:creeer la parite test
+test = data[-parts, ]
+###la dimension des deux parties: Apprentissage et Test
+nrow(train)
+nrow(test)
+
+############ MODEL 1: ARBRE DE DECISION #########
+#on va voir deux facons pour utiliser l'arbre de desicion
+####1-Modéliser le modèle d'arbre de dcéision selon meilleur CP --> PARTIE (A)
+######## CAS 1 --> CP=0 (sans elagage)
+######## CAS 2 --> CP=quelconque (avec elagage)
+#(Deduce the difference between of dendogram between the 2 cases en utilisant COURBE DE ROC)
+####2-Modéliser le modèle d'arbre de décision avec une validation croisée 10 fois --> PARTIE(B)
+######## CAS 3 --> METHOD=CV=REGRESSION 
+######## CAS 4 --> METHOD=BOOT=boostrap method
+#(deduce the change of the important variables between the 2 cases en utilisant les tbls t3 & t4)
+
+
+####### MODEL 1: ARBRE DE DECISION SELON MEILLEUR CP #######
+############### 1ER CAS(A): SANS ELAGAGE --> CP=0
+# cp=0: parametre de complexite nulle donc arbre complet
+# minsplit=5: nombre minimal d'ind dans un noeud.
+# Model rpart
+library(rpart)
+data=as.data.frame(data)
+dendri_cas1 <- rpart(target~., data=train, method="class", control=rpart.control(minsplit=5,cp=0))
+# PRENDRE UNE IDDEE GENERALE: nbr de variables, differentes valeurs de cp
+#il faut choisir la meilleure valeur de cp : en utilisant fct "printcp(dendr)
+#on chisit la valeur qui correspond au plus petite erreur
+printcp(dendri_cas1)
+# PLOT CP : visualiser le changement de l'arbre quand cp change
+#on peut regarder graphiquement et choisir cp en utilisant fct "plotcp" 
+#pour voir la valeur en utilise $cptable
+plotcp(dendri_cas1)
+# MATRICE CP : contenant les differentes valeurs de cp avec l'erreur 
+dendri_cas1$cptable
+#xerror: estimation de l'erreur
+#xstd: ecart type du risque
+# meilleur cp selon le min d'erreur ayant: minimum xerror + xstd
+cp.select <- function(big.tree)
+{
+  min.x <- which.min(big.tree$cptable[, 4]) 
+  for(i in  1: nrow(big.tree$cptable))
+  {
+    if(big.tree$cptable[i,4] < big.tree$cptable[min.x,4]+ big.tree$cptable[min.x, 5]) 
+      return(big.tree$cptable[i, 1])
+  }
+}
+# Quelle la valeure optimale de cp 
+cp.select(dendri_cas1)
+#pour voir l'arbre de desicion ecrite on utilise la fonction "prune"
+#de ce text ecrit on peut dire que "ca" est une variable importante
+dendrp_cas1 <- prune(dendri_cas1, cp = cp.select(dendri_cas1))
+dendrp_cas1
+summary(dendrp_cas1)
+#pour voir les variables les plus importantes
+dendrp_cas1$variable.importance
+#methode 1:pour visualiser le dendogramme 
+# dendrogramme en colorant les cases selon les tranches des revenus.
+library(rpart.plot)
+library(ggplot2)
+
+split.fun <- function(x, labs, digits, varlen, faclen)
+{
+  gsub(" = ", ":\n", labs)
+}
+prp(dendrp_cas1, extra=101,box.col=c("darksalmon", "lightblue")[dendrp_cas1$frame$yval], split.fun=split.fun)
+#methode 2:pour visualiser le dendogramme
+library("rattle")
+fancyRpartPlot(dendrp_cas1,cex=0.8,main = "Desicion Tree")
+#prediction(pour voir si le test en utilisant le model "desicion tree" est bonne ou non)
+predicted <- predict(dendrp_cas1, test,type="class")
+round(sum(test$target != predicted)/length(predicted),2)
+#ici on peut voir l'erreur de la prediction du model testee
+mc_cas1=round(100*table(test$target, predicted, dnn=c("reelle", "Predicted"))/length(predicted))
+mc_cas1
+#calcule de l'erreur manuellement en regardant la matrice 
+err_cas1 <- 1 - sum(diag(mc_cas1)) / sum(mc_cas1) 
+print(err_cas1)
+
+
+####################--------------------------------------####################
+
+# Validation par la courbe ROC et AUC
+#Courbe Roc et AUC des forets par AD:arbre de decision.
+library(pROC)
+#abel kena 7atin type=class bas hone badna nechte8l 3ala l prob
+#on a transforme la variable cible target en prob
+pdt_cas1=predict(dendrp_cas1, test,type="prob")
+head(pdt_cas1)
+RCad= roc(test$target, pdt_cas1[,2])
+rocAD = plot.roc(test$target, pdt_cas1[,2],
+                 main = " ROC  avec arbre de decision", 
+                 type="l", col="blue", grid=c(0.1,0.2),print.auc = TRUE) 
+
+
+#vous calculez les probabilités que, compte tenu de certaines varialbes explicatives,
+#un individu appartient à la classe codée . Si vous choisissez maintenant un seuil de probabilité
+#et classifiez tous les individus avec une probabilité supérieure à ce seuil  (bibayen 3l graphe seuil optimal)
+#vous ferez dans la plupart des cas des erreurs car généralement deux groupes ne peuvent pas être parfaitement distingués.
+#Pour ce seuil, vous pouvez maintenant calculer vos erreurs et la soi-disant sensibilité et spécificité.
+#Si vous procédez ainsi pour de nombreux seuils, vous pouvez construire une courbe ROC 
+#en traçant la sensibilité par rapport à la spécificité 1 pour de nombreux seuils possibles. 
+
+
+# pour chercher le seuil optimal selon l'auc
+rocSeuil_DT <- plot.roc(test$target, pdt_cas1[,2],
+                     main = "Interval de confiance", 
+                     percent=TRUE,
+                     ci = TRUE,                  # compute AUC (of AUC by default)
+                     print.auc = TRUE)           # print the AUC (will contain the CI)
+# interval de confiance par Bootstrap B=100
+#il a repete 100 fois pour chercher l'interval de confidence
+ciobj_DT=ci.se(rocSeuil_DT,                         # CI of sensitivity
+            specificities = seq(0, 100, 2)) # over a select set of specificities
+
+# ajouter l'interval de confiance sur la courbe en bleu
+plot(ciobj_DT, type = "shape", col = "#1c61b6AA")  
+
+# ajouter le seuil optimal
+seuil_cas1=ci(rocSeuil_DT, of = "thresholds", thresholds = "best",percent=T);
+seuil_cas1
+plot(seuil_cas1)
+## Courbe Lift (l'objectif c'est qui sont les individus qui ont une maladie)
+datlift=data.frame(test$target,pdt_cas1[,2])
+head(datlift)
+
+#maintenant if faut transformer dans le but de classer 
+#classer selon la seuil si plus petit de cette seuil ou plus grand
+# tranformer y dans la partie test en facteur
+datlift$test.target=as.factor(datlift$test.target)
+head(datlift)
+# appliquer le lift 
+lift_obj <- lift(test.target ~ pdt_cas1...2., data=datlift, class="1")
+# afficher la proportion des personnes malade--> target=1.
+#on deduit des resultat 54.4% ont une maladie
+#hayda lmhem mn l lift_obj eno na3ref n2asemon
+print(lift_obj)
+# courbe lift
+plot(lift_obj)
+#La courbe est proche de la limite theorique 
+#Notre ciblage est d'excellente qualite.
+
+
+# matrice de confusion avec caret
+#ifelse hone hiye:
+#n7ot bi alb colonne "pdt" ya=1 ya=0 7asb l seuil 
+#abel ken 7ateton bi tableau <50% aw >50%
+#eza seuil 3enda >0.25 7otelon bl pd valeur=1=maladie w eza seuil <0.25 7ot 0
+library(caret)
+pd=ifelse(pdt_cas1[,2]>=0.2563815,"1","0")
+head(pd)
+#obligatoire de les transformer en facteurs
+pd=as.factor(pd)
+test$target=as.factor(test$target)
+head(test$target)
+head(pd)
+length(pd)
+# avoir tous les criteres d'evaluations et en prenant le seuil optimal
+#ICI on peut voir les resultats de la predictinde l'arbre de decision
+mat =confusionMatrix(data=pd,reference=test$target,positive="1")
+
+print(mat)
+#acc?s aux indicateurs globaux
+print(mat$overall)
+#par classe
+print(mat$byClass)
+#EXPLICATION SUR MATRICE DE CONFUSION:
+#Mcnemar's Test P-Value=si c'est significatif ou no
+#kappa= bta3tina l accuracy edech hiye reel par rapport a accuracy predit
+
+####################--------------------------------------####################
+####################--------------------------------------####################
+####################--------------------------------------####################
+####################--------------------------------------####################
+####################--------------------------------------####################
+
+
+
+
+#############################################################################
+#############################################################################
+
+####### MODEL 1: ARBRE DE DECISION SELON MEILLEUR CP #######
+######### 2EME CAS(A): AVEC ELAGAGE --> CP=0.3
+# minsplit=5: nombre minimal d'ind dans un noeud.
+# Model rpart
+library(rpart)
+dendri_cas2 <- rpart(target ~.,data=train,method="class",
+                     control=rpart.control(minsplit=5,cp=0.3))
+# PRENDRE UNE IDDEE GENERALE: nbr de variables, differentes valeurs de cp
+#il faut choisir la meilleure valeur de cp : en utilisant fct "printcp(dendr)
+#on chisit la valeur qui correspond au plus petite erreur
+printcp(dendri_cas2)
+# PLOT CP : visualiser le changement de l'arbre quand cp change
+#on peut regarder graphiquement et choisir cp en utilisant fct "plotcp" 
+#pour voir la valeur en utilise $cptable
+plotcp(dendri_cas2)
+# MATRICE CP : contenant les differentes valeurs de cp avec l'erreur 
+dendri_cas2$cptable
+#xerror: estimation de l'erreur
+#xstd: ecart type du risque
+# meilleur cp selon le min d'erreur ayant: minimum xerror + xstd
+cp.select <- function(big.tree)
+{
+  min.x <- which.min(big.tree$cptable[, 4]) 
+  for(i in  1: nrow(big.tree$cptable))
+  {
+    if(big.tree$cptable[i,4] < big.tree$cptable[min.x,4]+ big.tree$cptable[min.x, 5]) 
+      return(big.tree$cptable[i, 1])
+  }
+}
+# Quelle la valeure optimale de cp 
+cp.select(dendri_cas2)
+#pour voir l'arbre de desicion ecrite on utilise la fonction "prune"
+#de ce text ecrit on peut dire que "ca" est une variable importante
+dendrp_cas2 <- prune(dendri_cas2, cp = cp.select(dendri_cas2))
+dendrp_cas2
+summary(dendrp_cas2)
+#pour voir les variables les plus importantes
+dendrp_cas2$variable.importance
+#methode 1:pour visualiser le dendogramme 
+# dendrogramme en colorant les cases selon les tranches des revenus.
+library(rpart.plot)
+library(ggplot2)
+
+split.fun <- function(x, labs, digits, varlen, faclen)
+{
+  gsub(" = ", ":\n", labs)
+}
+prp(dendrp_cas2, extra=101,box.col=c("darksalmon", "lightblue")[dendrp_cas2$frame$yval], split.fun=split.fun)
+#methode 2:pour visualiser le dendogramme
+library("rattle")
+fancyRpartPlot(dendrp_cas2,cex=0.8,main = "Desicion Tree")
+#prediction(pour voir si le test en utilisant le model "desicion tree" est bonne ou non)
+predicted <- predict(dendrp_cas2, test, type="class")
+round(sum(test$target != predicted)/length(predicted),2)
+#ici on peut voir l'erreur de la prediction du model testee
+mc_cas2=round(100*table(test$target, predicted, dnn=c("reelle", "Predicted"))/length(predicted))
+mc_cas2
+#calcule de l'erreur manuellement en regardanr le matrice 
+err_cas2 <- 1 - sum(diag(mc_cas2)) / sum(mc_cas2) 
+print(err_cas2)
+
+###############################################################################
+
+# Validation par la courbe ROC et AUC
+#Courbe Roc et AUC des forets par AD:arbre de decision.
+library(pROC)
+#abel kena 7atin type=class bas hone badna nechte8l 3ala l prob
+#on a transforme la variable cible target en prob
+pdt_cas2=predict(dendrp_cas2, test,type="prob")
+head(pdt_cas2)
+RCad= roc(test$target, pdt_cas2[,2])
+rocAD = plot.roc(test$target, pdt_cas2[,2],
+                 main = " ROC  avec arbre de decision", 
+                 type="l", col="blue", grid=c(0.1,0.2),print.auc = TRUE) 
+
+
+# pour chercher le seuil optimal selon l'auc
+rocSeuil <- plot.roc(test$target, pdt_cas2[,2],
+                     main = "Interval de confiance", 
+                     percent=TRUE,
+                     ci = TRUE,                  # compute AUC (of AUC by default)
+                     print.auc = TRUE)           # print the AUC (will contain the CI)
+# interval de confiance par Bootstrap B=100
+#il a repete 100 fois pour chercher l'interval de confidence
+ciobj=ci.se(rocSeuil,                         # CI of sensitivity
+            specificities = seq(0, 100, 2)) # over a select set of specificities
+
+# ajouter l'interval de confiance sur la courbe en bleu
+plot(ciobj, type = "shape", col = "#1c61b6AA")  
+
+# ajouter le seuil optimal
+seuil_cas2=ci(rocSeuil, of = "thresholds", thresholds = "best",percent=T);
+seuil_cas2
+plot(seuil_cas2)
+## Courbe Lift (l'objectif c'est qui sont les individus qui ont une maladie)
+datlift=data.frame(test$target,pdt_cas2[,2])
+head(datlift)
+
+#maintenant if faut transformer dans le but de classer 
+#classer selon la seuil si plus petit de cette seuil ou plus grand
+# tranformer y dans la partie test en facteur
+datlift$test.target=as.factor(datlift$test.target)
+head(datlift)
+# appliquer le lift 
+lift_obj <- lift(test.target ~ pdt_cas2...2., data=datlift, class="1")
+# afficher la proportion des personnes malade--> target=1.
+#on deduit des resultat 54.4% ont une maladie
+#hayda lmhem mn l lift_obj eno na3ref n2asemon
+print(lift_obj)
+# courbe lift
+plot(lift_obj)
+#La courbe est proche de la limite theorique 
+#Notre ciblage est d'excellente qualite.
+
+
+# matrice de confusion avec caret
+#ifelse hone hiye:
+#n7ot bi alb colonne "pdt" ya=1 ya=0 7asb l seuil 
+#abel ken 7ateton bi tableau <50% aw >50%
+#eza seuil 3enda >0.25 7otelon bl pd valeur=1=maladie w eza seuil <0.25 7ot 0
+library(caret)
+pd2=ifelse(pdt_cas2[,2]>=0.2563815,"1","0")
+head(pd1)
+#obligatoire de les transformer en facteurs
+pd=as.factor(pd2)
+test$target=as.factor(test$target)
+head(test$target)
+head(pd2)
+length(pd2)
+# avoir tous les criteres d'evaluations et en prenant le seuil optimal
+mat =confusionMatrix(data=pd,reference=test$target,positive="1")
+print(mat)
+#acc?s aux indicateurs globaux
+print(mat$overall)
+#par classe
+print(mat$byClass)
+#EXPLICATION SUR MATRICE DE CONFUSION:
+#Mcnemar's Test P-Value=si c'est significatif ou no
+#kappa= bta3tina l accuracy edech hiye reel par rapport a accuracy predit
+
+###############################################################################
+###############################################################################
+
+####### MODEL 1: ARBRE DE DECISION AVEC VALIDATION CROISEE 10 FOIS #######.
+########## 3EME CAS(B) : EN UTILISANT LA METHODE "CV"###################
+fitControl_cas3 <- trainControl(method = "cv", number = 10, savePredictions = FALSE) 
+# Create model Using cross validation
+d$target=as.factor(d$target)
+dt_model_cas3 <- train(target ~ ., data =train, method = 'rpart', trControl = fitControl_cas3)
+#on peut voir la cross validation a choisit c'est 3 differentes valeurs de cp
+dt_model_cas3$results
+###trouver les variables les plus importantes selon la methode: REGRESSION en utilisant fct "varImp"
+dt_importance_cas3 <- varImp(dt_model_cas3)
+# Create plot of importance of variables(to visualize which variables affects the most)
+ggplot(data = dt_importance_cas3, mapping = aes(x = dt_importance[,1])) + # Data & mapping
+  geom_boxplot() + # Create box plot
+  geom_bar(stat="identity", fill="lightblue", colour="black")+
+  labs(title = "Variable importance: Decision tree model") + # Title
+  theme_light() # Theme
+#methode 1:pour visualiser le dendogramme 
+# dendrogramme en colorant les cases selon les tranches des revenus.
+library(rpart.plot)
+library(ggplot2)
+
+split.fun <- function(x, labs, digits, varlen, faclen)
+{
+  gsub(" = ", ":\n", labs)
+}
+prp(dt_model_cas3$finalModel, extra=101,box.col=c("darksalmon", "lightblue")[dt_model_cas3$finalModel$frame$yval], split.fun=split.fun)
+#methode 2:pour visualiser le dendogramme
+fancyRpartPlot(dt_model_cas3$finalModel, sub = '',type = 2,main = "Desicion Tree")
+summary(dt_model_cas3$finalModel)
+##PRéDICTION : modèle d'arbre de décision
+prediction_dt_cas3 <- predict(dt_model_cas3, test)
+#Vérifiez la proportion des prédictions qui étaient exactes.
+#hayda tbl bya3tina pourcentage (ma bya3te nbr)
+t3=table(prediction_dt_cas3, test$target) %>% # Create prediction table. 
+  prop.table() %>% # Convert table values into proportions instead of counts. 
+  round(2) # Round numbers to 2 significant values. 
+t3
+err3=(1-sum(diag(t3)))/1
+err3
+
+# pas de courbe de roc ici on regarde le tableau t3 #
+
+###############################################################################
+###############################################################################
+###############################################################################
+
+
+####### MODEL 1: ARBRE DE DECISION AVEC VALIDATION CROISEE 10 FOIS #######.
+########## 4EME CAS(B) : EN UTILISANT LA METHODE "boot"###################
+fitControl_cas4 <- trainControl(method = "boot", number = 10, savePredictions = FALSE) 
+# Create model Using cross validation
+d$target=as.factor(d$target)
+dt_model_cas4<- train(target ~ ., data =train, method = 'rpart', trControl = fitControl_cas4)
+#on peut voir la cross validation a choisit c'est 3 differentes valeurs de cp
+dt_model_cas4$results
+###trouver les variables les plus importantes selon la methode: REGRESSION en utilisant fct "varImp"
+dt_importance_cas4 <- varImp(dt_model_cas4)
+# Create plot of importance of variables(to visualize which variables affects the most)
+ggplot(data = dt_importance_cas4, mapping = aes(x = dt_importance[,1])) + # Data & mapping
+  geom_boxplot() + # Create box plot
+  geom_bar(stat="identity", fill="lightblue", colour="black")+
+  labs(title = "Variable importance: Decision tree model") + # Title
+  theme_light() # Theme
+#methode 1:pour visualiser le dendogramme 
+# dendrogramme en colorant les cases selon les tranches des revenus.
+library(rpart.plot)
+library(ggplot2)
+
+split.fun <- function(x, labs, digits, varlen, faclen)
+{
+  gsub(" = ", ":\n", labs)
+}
+prp(dt_model_cas4$finalModel, extra=101,box.col=c("darksalmon", "lightblue")[dt_model_cas4$finalModel$frame$yval], split.fun=split.fun)
+# pour visualiser le dendogramme
+fancyRpartPlot(dt_model_cas4$finalModel, sub = '',type = 2,main = "Desicion Tree")
+
+##PRéDICTION : modèle d'arbre de décision
+prediction_dt_cas4 <- predict(dt_model_cas4, test)
+#Vérifiez la proportion des prédictions qui étaient exactes.
+#hayda tbl bya3tina pourcentage (ma bya3te nbr)
+library(dplyr)
+t4=table(prediction_dt_cas4, test$target) %>% # Create prediction table. 
+  prop.table() %>% # Convert table values into proportions instead of counts. 
+  round(2) # Round numbers to 2 significant values. 
+t4
+err4=(1-sum(diag(t4)))/1
+err4
+
+# pas de courbe de roc ici on regarde seulement le tableau t4 #
+
+
+###############################################################################
+###############################################################################
+
+####### MODEL 1: ARBRE DE DECISION AVEC VALIDATION CROISEE 5 FOIS #######.
+########## 5EME CAS(B) : EN UTILISANT LA METHODE "CV"###################
+fitControl_cas5 <- trainControl(method = "cv", number = 5, savePredictions = FALSE) 
+# Create model Using cross validation
+d$target=as.factor(d$target)
+dt_model_cas5 <- train(target ~ ., data =train, method = 'rpart', trControl = fitControl_cas3)
+#on peut voir la cross validation a choisit c'est 3 differentes valeurs de cp
+dt_model_cas5$results
+###trouver les variables les plus importantes selon la methode: REGRESSION en utilisant fct "varImp"
+dt_importance_cas5 <- varImp(dt_model_cas5)
+# Create plot of importance of variables(to visualize which variables affects the most)
+ggplot(data = dt_importance_cas5, mapping = aes(x = dt_importance[,1])) + # Data & mapping
+  geom_boxplot() + # Create box plot
+  geom_bar(stat="identity", fill="lightblue", colour="black")+
+  labs(title = "Variable importance: Decision tree model") + # Title
+  theme_light() # Theme
+#methode 1:pour visualiser le dendogramme 
+# dendrogramme en colorant les cases selon les tranches des revenus.
+library(rpart.plot)
+library(ggplot2)
+
+split.fun <- function(x, labs, digits, varlen, faclen)
+{
+  gsub(" = ", ":\n", labs)
+}
+prp(dt_model_cas5$finalModel, extra=101,box.col=c("darksalmon", "lightblue")[dt_model_cas5$finalModel$frame$yval], split.fun=split.fun)
+#methode 2:pour visualiser le dendogramme
+fancyRpartPlot(dt_model_cas5$finalModel, sub = '',type = 2,main = "Desicion Tree")
+summary(dt_model_cas5$finalModel)
+##PRéDICTION : modèle d'arbre de décision
+prediction_dt_cas5 <- predict(dt_model_cas5, test)
+#Vérifiez la proportion des prédictions qui étaient exactes.
+#hayda tbl bya3tina pourcentage (ma bya3te nbr)
+t5=table(prediction_dt_cas5, test$target) %>% # Create prediction table. 
+  prop.table() %>% # Convert table values into proportions instead of counts. 
+  round(2) # Round numbers to 2 significant values. 
+t5
+err5=(1-sum(diag(t5)))/1 
+err5
+# pas de courbe de roc ici on regarde le tableau t5 #
+
+
+#### ON COMPARE CES 5 CAS SELON : ####
+# 1)L'erreur de la matrice
+# 2)La courbe de roc
+# 3)Selon le temps
+
+#POUR LES 5 CAS 
+######## CAS 1 --> CP=0 (sans elagage)
+######## CAS 2 --> CP=quelconque (avec elagage)
+######## CAS 3 --> METHOD=CV=cross validation for k=10 
+######## CAS 4 --> METHOD=BOOT=boostrap method
+######## CAS 5 --> METHOD=CV=cross validation for k=5 
+
+
+
+# temps d'execusion 
+#install.packages("microbenchmark")
+library(microbenchmark)
+library("caret")
+timbag= microbenchmark(times=10,unit = "ms", 
+                       
+                       "Sans elagage cp=o"={dendri_cas1 <- rpart(target~., data=train, method="class", control=rpart.control(minsplit=5,cp=0))
+                       dendrp_cas1 <- prune(dendri_cas1, cp = cp.select(dendri_cas1))
+                       } ,
+                       
+                       "Avec elagage cp=0.3"={  dendri_cas2 <- rpart(target ~.,data=train,method="class",control=rpart.control(minsplit=5,cp=0.3))
+                       dendrp_cas2 <- prune(dendri_cas2, cp = cp.select(dendri_cas2))
+                       
+                       },   
+                       
+                       "Cross Validation k=10"={  fitControl_cas3 <- trainControl(method = "cv", number = 10, savePredictions = FALSE) 
+                       dt_model_cas3 <- train(target ~ ., data =train, method = 'rpart', trControl = fitControl_cas3)
+                       
+                       },   
+                       
+                       "Boosting"={  fitControl_cas4 <- trainControl(method = "boot", number = 10, savePredictions = FALSE) 
+                       dt_model_cas4<- train(target ~ ., data =train, method = 'rpart', trControl = fitControl_cas4)
+                       },
+                       
+                       "Cross Validation k=5"={ fitControl_cas5 <- trainControl(method = "cv", number = 5, savePredictions = FALSE) 
+                       dt_model_cas5<- train(target ~ ., data =train, method = 'rpart', trControl = fitControl_cas4)
+                         
+                       }
+)
+
+#pour comparer graphiquement le temps de chaque cas de DT -->fonction "autoplot"
+#pour trouver la moyenne de temps de chaque cas de DT -->fonction "summary"
+### c'est le temps d'excusion de chaque methode
+autoplot(timbag)
+summary(timbag)
+
+
+
+####################################################################################
+###################################################################################
+###################################################################################
+###################################################################################
+
+
+
+
+########################### MODEL 2: BAGGING ##################################
+############### IL EXISTE 3 CAS DE BAGGING ##################
+#### CAS 1: BAGGING USING "BAGCONTROL" FUNCTION (B=nbr of resampling choosen randomly)
+#### CAS 1: BAGGING USING "CROSS VALIDATION" --> K=10 (B=nbr of resampling choosen selon k)
+#### CAS 2: BAGGING USING "CROSS VALIDATION" --> K=5 (B=nbr of resampling choosen selon k)
+#### CAS 3: BAGGING UING "OOB" METHOD (B=nbr of resampling is choosen the optimal oob)
+
+
+data$target=as.factor(data$target)
+##On utilise la meme partition utilise dans le 1er modele
+###1st: creer la partition
+library(microbenchmark)
+library(caret)
+set.seed(34)
+parts = createDataPartition(data$target, p =0.7, list = F)
+###2nd:creer la partie apprentissage
+train = data[parts, ]
+head(parts)
+###3rd:creeer la parite test
+test = data[-parts, ]
+
+
+##############################################################################
+#################################################################################
+##################################################################################
+######################## CAS 1 : BAGGING USING "bagcontrol" function #############
+#En utilisant la fonction "bagcontrol" dans le  librairie "party" 
+# bagging avec 20 bootstraps
+# contructions de 20 arbres sans elagage#
+library(party)
+#pour savoir comment fonctionne la librairie bagging
+bagCtrl <- bagControl(fit = ctreeBag$fit,
+                      predict = ctreeBag$pred,
+                      aggregate = ctreeBag$aggregate)
+ctreeBag$aggregate
+#on prend toutes les variables sauf la variable cible
+bg <- bag(x=train[,names(train)!="target"],y=train$target, data = train,
+          B= 20, bagControl = bagCtrl)
+print(bg)
+#on a reppetter l'arbre de decision 20 fois sans ellagage 
+#on peut voir la division et l'erreur oob  dans chaque fois
+bg$fits
+
+# validation du modele sur la partie test
+#en utilisant la fonction "predict" pour voir la prediction du model "bagging"
+#sur la partir test
+predicted=predict(bg, newdata=test,type="class")
+
+
+#methode 1 :pour l'erreur: pour trouver le tableau de prediction 
+#On peut changer les noms des colonnes : "reelle, prediction"
+mc_bg_cas1=round(100*table(test$target, predicted, dnn=c("reelle", "Predicted"))/length(predicted))
+mc_bg_cas1
+#puisqu'il existe 2 modalites --> 1=maladie et 0=pas de maladie
+err_bg_cas1=1-sum(diag(mc_bg_cas1))/sum(mc_bg_cas1)
+err_bg_cas1
+#choix de B selon l'erreur minimal
+#en utilisant cette sequence: de 10 --> 100 et chaque fois augmente de 10
+#ntree c'est le nombre d'observation pour chaque fois
+#tout d'abord obs=1 , obs=3 , obs=5 , obs=10, obs=20, obs=30.....
+ntree<- c(1,3,5, seq(10,200, 10))
+#on touve l'erreur de zero jusqu'a 200 (oob error de toute cette sequence)
+err_bag=rep(0, length(ntree))
+
+for(i in 1:length(ntree)){
+  
+  bagCtrl <- bagControl(fit = ctreeBag$fit,
+                        predict = ctreeBag$pred,
+                        aggregate = ctreeBag$aggregate)
+  bg <- bag(x=train[,names(train)!="target"],y=train$target, data = train, 
+            bagControl = bagCtrl,nbagg=ntree[i])
+  
+  bgp<- predict(bg, newdata = test, type="class")
+  err_bag[i] <- sum((bgp)!=test$target)/nrow(test)
+  
+}
+#pour visualiser l'erreur oob pour le ntree 0-->200 (nbr d'observation)
+plot(ntree, err_bag, type = 'l', col=4, lwd=3)
+#l'erreur minimal de oob c'est 0.111
+min(err_bag)
+err_bag
+#voici l'erreur oob de chaque sequence de 0 -->100 (nbr d'observation)
+cbind(err_bag,ntree)
+
+#on constate que l'erreur minimal correspond a 110 observation
+#bien sur qu'on ne prend pas nbr d'obs=1 meme si nous donne oob minimal
+#car on a pas une echantillion qui est forme d'1 seul obseravtion
+
+###############################################################################
+
+#Methode 2: pour l'erreur : Courbe de Roc
+
+# Validation par la courbe ROC et AUC
+#Courbe Roc et AUC des forets par AD:arbre de decision.
+library(pROC)
+#abel kena 7atin type=class bas hone badna nechte8l 3ala l prob
+#on a transforme la variable cible target en prob
+pdtbg_cas1=predict(bg, test,type="prob")
+head(pdtbg_cas1)
+RCad= roc(test$target, pdtbg_cas1[,2])
+rocAD = plot.roc(test$target, pdtbg_cas1[,2],
+                 main = " ROC  avec arbre de decision", 
+                 type="l", col="blue", grid=c(0.1,0.2),print.auc = TRUE) 
+
+
+# pour chercher le seuil optimal selon l'auc
+rocSeuil <- plot.roc(test$target, pdtbg_cas1[,2],
+                     main = "Interval de confiance", 
+                     percent=TRUE,
+                     ci = TRUE,                  # compute AUC (of AUC by default)
+                     print.auc = TRUE)           # print the AUC (will contain the CI)
+# interval de confiance par Bootstrap B=100
+#il a repete 100 fois pour chercher l'interval de confidence
+ciobj=ci.se(rocSeuil,                         # CI of sensitivity
+            specificities = seq(0, 100, 2)) # over a select set of specificities
+
+# ajouter l'interval de confiance sur la courbe en bleu
+plot(ciobj, type = "shape", col = "#1c61b6AA")  
+
+# ajouter le seuil optimal
+seuilbg_cas1=ci(rocSeuil, of = "thresholds", thresholds = "best",percent=T);
+seuilbg_cas1
+plot(seuilbg_cas1)
+## Courbe Lift (l'objectif c'est qui sont les individus qui ont une maladie)
+datlift=data.frame(test$target,pdtbg_cas1[,2])
+head(datlift)
+
+#maintenant if faut transformer dans le but de classer 
+#classer selon la seuil si plus petit de cette seuil ou plus grand
+# tranformer y dans la partie test en facteur
+datlift$test.target=as.factor(datlift$test.target)
+head(datlift)
+# appliquer le lift 
+lift_obj <- lift(test.target ~ pdtbg_cas1...2., data=datlift, class="1")
+# afficher la proportion des personnes malade--> target=1.
+#on deduit des resultat 54.4% ont une maladie
+#hayda lmhem mn l lift_obj eno na3ref n2asemon
+print(lift_obj)
+# courbe lift
+plot(lift_obj)
+#La courbe est proche de la limite theorique 
+#Notre ciblage est d'excellente qualite.
+
+
+# matrice de confusion avec caret
+#ifelse hone hiye:
+#n7ot bi alb colonne "pdt" ya=1 ya=0 7asb l seuil 
+#abel ken 7ateton bi tableau <50% aw >50%
+#eza seuil 3enda >0.25 7otelon bl pd valeur=1=maladie w eza seuil <0.25 7ot 0
+library(caret)
+pd=ifelse(pdtbg_cas1[,2]>=0.2563815,"1","0")
+head(pd)
+#obligatoire de les transformer en facteurs
+pd=as.factor(pd)
+test$target=as.factor(test$target)
+head(test$target)
+head(pd)
+length(pd)
+# avoir tous les criteres d'evaluations et en prenant le seuil optimal
+mat =confusionMatrix(data=pd,reference=test$target,positive="1")
+print(mat)
+#acc?s aux indicateurs globaux
+print(mat$overall)
+#par classe
+print(mat$byClass)
+#EXPLICATION SUR MATRICE DE CONFUSION:
+#Mcnemar's Test P-Value=si c'est significatif ou no
+#kappa= bta3tina l accuracy edech hiye reel par rapport a accuracy predit
+
+
+################################################################################
+################################################################################
+################################################################################
+################################################################################
+
+
+############################# CAS 2: CROSS VALIDATION WITH K=10 #############
+# Bagging selon la fonction train en utilisant le "CROSS VALIDATION"--> k=10
+library(caret)
+trCtrl <- trainControl(method = "cv", number=10)
+bg2 <- train(x=train[,names(train)!="target"],y=train$target , data = train, 
+             method = "treebag", trControl = trCtrl, metric="Accuracy" )
+#fonction SUMMARY nous donne comment a travailler chaque cross validation
+summary(bg2)
+#ce qui est important de ce decoupage c'est le resultat
+#pour voir l'accuracy de cette methode "bagging"
+bg2$results
+#pour voir que chaque fois on a  10
+bg2$resampledCM
+
+####pour voir la prediction du modele "bagging" sur la partie test 
+bg2p=predict.train(bg2, newdata = test, type="raw")
+mc_bg_cas2=round(100*table(test$target, bg2p, dnn=c("reelle", "Predicted"))/length(bg2p))
+mc_bg_cas2
+#Methode 1: pour voir l'erreur: tableau d'erreur  
+diag(mc_bg_cas2)
+err_bg_cas2=1-sum(diag(mc_bg_cas2))/sum(mc_bg_cas2)
+err_bg_cas2
+
+#Methode 2 : pour voir l'erreur : Courbe de Roc
+
+# Validation par la courbe ROC et AUC
+#Courbe Roc et AUC des forets par AD:arbre de decision.
+library(pROC)
+#abel kena 7atin type=class bas hone badna nechte8l 3ala l prob
+#on a transforme la variable cible target en prob
+pdtbg_cas2=predict(bg2, test,type="prob")
+head(pdtbg_cas2)
+RCad= roc(test$target, pdtbg_cas2[,2])
+rocAD = plot.roc(test$target, pdtbg_cas2[,2],
+                 main = " ROC  avec arbre de decision", 
+                 type="l", col="blue", grid=c(0.1,0.2),print.auc = TRUE) 
+
+
+# pour chercher le seuil optimal selon l'auc
+rocSeuil <- plot.roc(test$target, pdtbg_cas2[,2],
+                     main = "Interval de confiance", 
+                     percent=TRUE,
+                     ci = TRUE,                  # compute AUC (of AUC by default)
+                     print.auc = TRUE)           # print the AUC (will contain the CI)
+# interval de confiance par Bootstrap B=100
+#il a repete 100 fois pour chercher l'interval de confidence
+ciobj=ci.se(rocSeuil,                         # CI of sensitivity
+            specificities = seq(0, 100, 2)) # over a select set of specificities
+
+# ajouter l'interval de confiance sur la courbe en bleu
+plot(ciobj, type = "shape", col = "#1c61b6AA")  
+
+# ajouter le seuil optimal
+seuilbg_cas2=ci(rocSeuil, of = "thresholds", thresholds = "best",percent=T);
+seuilbg_cas2
+plot(seuilbg_cas1)
+## Courbe Lift (l'objectif c'est qui sont les individus qui ont une maladie)
+datlift=data.frame(test$target,pdtbg_cas2[,2])
+head(datlift)
+
+#maintenant if faut transformer dans le but de classer 
+#classer selon la seuil si plus petit de cette seuil ou plus grand
+# tranformer y dans la partie test en facteur
+datlift$test.target=as.factor(datlift$test.target)
+head(datlift)
+# appliquer le lift 
+lift_obj <- lift(test.target ~ pdtbg_cas2...2., data=datlift, class="1")
+# afficher la proportion des personnes malade--> target=1.
+#on deduit des resultat 54.4% ont une maladie
+#hayda lmhem mn l lift_obj eno na3ref n2asemon
+print(lift_obj)
+# courbe lift
+plot(lift_obj)
+#La courbe est proche de la limite theorique 
+#Notre ciblage est d'excellente qualite.
+
+
+# matrice de confusion avec caret
+#ifelse hone hiye:
+#n7ot bi alb colonne "pdt" ya=1 ya=0 7asb l seuil 
+#abel ken 7ateton bi tableau <50% aw >50%
+#eza seuil 3enda >0.25 7otelon bl pd valeur=1=maladie w eza seuil <0.25 7ot 0
+library(caret)
+pd2=ifelse(pdtbg_cas2[,2]>=0.2563815,"1","0")
+head(pd)
+#obligatoire de les transformer en facteurs
+pd2=as.factor(pd2)
+test$target=as.factor(test$target)
+head(test$target)
+head(pd2)
+length(pd2)
+# avoir tous les criteres d'evaluations et en prenant le seuil optimal
+mat =confusionMatrix(data=pd2,reference=test$target,positive="1")
+print(mat)
+#acc?s aux indicateurs globaux
+print(mat$overall)
+#par classe
+print(mat$byClass)
+#EXPLICATION SUR MATRICE DE CONFUSION:
+#Mcnemar's Test P-Value=si c'est significatif ou no
+#kappa= bta3tina l accuracy edech hiye reel par rapport a accuracy predit
+
+
+
+
+################################################################################
+################################################################################
+################################################################################
+################################################################################
+
+
+############################# CAS 3: CROSS VALIDATION WITH K=5 #############
+library(caret)
+trCtrl <- trainControl(method = "cv", number=5)
+bg3 <- train(x=train[,names(train)!="target"],y=train$target , data = train, 
+             method = "treebag", trControl = trCtrl, metric="Accuracy" )
+summary(bg3)
+bg3$results
+#to see nbr of repetition
+bg3$resampledCM
+
+####pour voir la prediction su modele "bagging" sur la partie test
+#Methode 1: pour voir l'erreur : par le tableau
+bg3p=predict.train(bg3, newdata = test, type="raw")
+mc_bg_cas3=round(100*table(test$target, bg3p, dnn=c("reelle", "Predicted"))/length(bg3p))
+mc_bg_cas3
+diag(mc_bg_cas3)
+err_bg_cas3=1-sum(diag(mc_bg_cas3))/sum(mc_bg_cas3)
+err_bg_cas3
+
+
+Cases=c("cas1","cas2","cas3")
+Errors=c(err_bg_cas1,err_bg_cas2,err_bg_cas3)
+library(ggplot2)
+###COMPARONS LES 3 CAS
+# Create a data frame with two vectors
+df <- data.frame(
+  qualitative = c("cas1","cas2","cas3"),
+  quantitative = c('err_bg_cas1','err_bg_cas2','err_bg_cas3'))
+# Plot the vectors
+ggplot(df, aes(x = qualitative, y = quantitative)) +
+  geom_bar(stat = "identity")
+
+## Visualisons la difference entre les 3 cas du "BAGGING"
+boxplot(err_bg_cas1,err_bg_cas2,err_bg_cas3,names = c("cas1","cas2","cas3"))
+
+
+#Methode 2: pour voir l'erreur : Courbe de Roc
+
+# Validation par la courbe ROC et AUC
+#Courbe Roc et AUC des forets par AD:arbre de decision.
+library(pROC)
+#abel kena 7atin type=class bas hone badna nechte8l 3ala l prob
+#on a transforme la variable cible target en prob
+pdtbg_cas3=predict(bg3, test,type="prob")
+head(pdtbg_cas3)
+RCad= roc(test$target, pdtbg_cas3[,2])
+rocAD = plot.roc(test$target, pdtbg_cas3[,2],
+                 main = " ROC  avec arbre de decision", 
+                 type="l", col="blue", grid=c(0.1,0.2),print.auc = TRUE) 
+
+
+# pour chercher le seuil optimal selon l'auc
+rocSeuil <- plot.roc(test$target, pdtbg_cas3[,2],
+                     main = "Interval de confiance", 
+                     percent=TRUE,
+                     ci = TRUE,                  # compute AUC (of AUC by default)
+                     print.auc = TRUE)           # print the AUC (will contain the CI)
+# interval de confiance par Bootstrap B=100
+#il a repete 100 fois pour chercher l'interval de confidence
+ciobj=ci.se(rocSeuil,                         # CI of sensitivity
+            specificities = seq(0, 100, 2)) # over a select set of specificities
+
+# ajouter l'interval de confiance sur la courbe en bleu
+plot(ciobj, type = "shape", col = "#1c61b6AA")  
+
+# ajouter le seuil optimal
+seuilbg_cas3=ci(rocSeuil, of = "thresholds", thresholds = "best",percent=T);
+seuilbg_cas3
+plot(seuilbg_cas1)
+## Courbe Lift (l'objectif c'est qui sont les individus qui ont une maladie)
+datlift=data.frame(test$target,pdtbg_cas3[,2])
+head(datlift)
+
+#maintenant if faut transformer dans le but de classer 
+#classer selon la seuil si plus petit de cette seuil ou plus grand
+# tranformer y dans la partie test en facteur
+datlift$test.target=as.factor(datlift$test.target)
+head(datlift)
+# appliquer le lift 
+lift_obj <- lift(test.target ~ pdtbg_cas3...2., data=datlift, class="1")
+# afficher la proportion des personnes malade--> target=1.
+#on deduit des resultat 54.4% ont une maladie
+#hayda lmhem mn l lift_obj eno na3ref n2asemon
+print(lift_obj)
+# courbe lift
+plot(lift_obj)
+#La courbe est proche de la limite theorique 
+#Notre ciblage est d'excellente qualite.
+
+
+# matrice de confusion avec caret
+#ifelse hone hiye:
+#n7ot bi alb colonne "pdt" ya=1 ya=0 7asb l seuil 
+#abel ken 7ateton bi tableau <50% aw >50%
+#eza seuil 3enda >0.25 7otelon bl pd valeur=1=maladie w eza seuil <0.25 7ot 0
+library(caret)
+pd3=ifelse(pdtbg_cas3[,2]>=0.2563815,"1","0")
+head(pd)
+#obligatoire de les transformer en facteurs
+pd3=as.factor(pd3)
+test$target=as.factor(test$target)
+head(test$target)
+head(pd3)
+length(pd3)
+# avoir tous les criteres d'evaluations et en prenant le seuil optimal
+mat =confusionMatrix(data=pd3,reference=test$target,positive="1")
+print(mat)
+#acc?s aux indicateurs globaux
+print(mat$overall)
+#par classe
+print(mat$byClass)
+#EXPLICATION SUR MATRICE DE CONFUSION:
+#Mcnemar's Test P-Value=si c'est significatif ou no
+#kappa= bta3tina l accuracy edech hiye reel par rapport a accuracy predit
+
+
+
+###############################################################################
+##############################################################################
+##############################################################################
+
+######################## CAS 4: BAGGING USING "OOB" METHOD ###################
+# je peux utiliser aussi methode OOB, cette methode tout de suite nous donne B=?
+# alors que la premiere methode nous donne un graphe et de ce graphe on choisit B
+# selon l'erreur minimale de oob (err_bag)
+trCtrl = trainControl(method = "oob")
+bago <- train(x=train[,names(train)!="target"],y=train$target , data = train, method = "treebag", 
+              trControl = trCtrl, metric="Accuracy",keepX=T )
+#3atetne hon pour oob=25 ya3ne t8ayar 3an li fo2
+#bas bla7ez eno erreur pour oob=25 3am tkoun 1-0.94=6%
+#mais bl methode li abel kenet erreur akbr mn 6%
+summary(bago)
+bago$results
+# pour trouver la matrice de confusion avec type "raw" 
+bagop=predict(bago, newdata = test, type="raw")
+mco=round(100*table(test$target, bg2p, dnn=c("reelle", "Predicted"))/length(bg2p))
+mco
+diag(mco)
+err4=1-sum(diag(mco))/sum(mco)
+err4
+
+#pour voir l'accuracy of CAS 2 & CAS 3 & CAS 4
+#mais pour CAS 1 it's null since B is choosen randomlly
+bg2$results
+bg3$results
+bago$results
+
+#Methode 2:pour voir l'erreur : courbe de Roc
+
+# Validation par la courbe ROC et AUC
+#Courbe Roc et AUC des forets par AD:arbre de decision.
+library(pROC)
+#abel kena 7atin type=class bas hone badna nechte8l 3ala l prob
+#on a transforme la variable cible target en prob
+pdtbg_cas4=predict(bago, test,type="prob")
+head(pdtbg_cas)
+RCad= roc(test$target, pdtbg_cas4[,2])
+rocAD = plot.roc(test$target, pdtbg_cas4[,2],
+                 main = " ROC  avec arbre de decision", 
+                 type="l", col="blue", grid=c(0.1,0.2),print.auc = TRUE) 
+
+
+# pour chercher le seuil optimal selon l'auc
+rocSeuil <- plot.roc(test$target, pdtbg_cas4[,2],
+                     main = "Interval de confiance", 
+                     percent=TRUE,
+                     ci = TRUE,                  # compute AUC (of AUC by default)
+                     print.auc = TRUE)           # print the AUC (will contain the CI)
+# interval de confiance par Bootstrap B=100
+#il a repete 100 fois pour chercher l'interval de confidence
+ciobj=ci.se(rocSeuil,                         # CI of sensitivity
+            specificities = seq(0, 100, 2)) # over a select set of specificities
+
+# ajouter l'interval de confiance sur la courbe en bleu
+plot(ciobj, type = "shape", col = "#1c61b6AA")  
+
+# ajouter le seuil optimal
+seuilbg_cas4=ci(rocSeuil, of = "thresholds", thresholds = "best",percent=T);
+seuilbg_cas4
+plot(seuilbg_cas4)
+## Courbe Lift (l'objectif c'est qui sont les individus qui ont une maladie)
+datlift=data.frame(test$target,pdtbg_cas4[,2])
+head(datlift)
+
+#maintenant if faut transformer dans le but de classer 
+#classer selon la seuil si plus petit de cette seuil ou plus grand
+# tranformer y dans la partie test en facteur
+datlift$test.target=as.factor(datlift$test.target)
+head(datlift)
+# appliquer le lift 
+lift_obj <- lift(test.target ~ pdtbg_cas4...2., data=datlift, class="1")
+# afficher la proportion des personnes malade--> target=1.
+#on deduit des resultat 54.4% ont une maladie
+#hayda lmhem mn l lift_obj eno na3ref n2asemon
+print(lift_obj)
+# courbe lift
+plot(lift_obj)
+#La courbe est proche de la limite theorique 
+#Notre ciblage est d'excellente qualite.
+
+
+# matrice de confusion avec caret
+#ifelse hone hiye:
+#n7ot bi alb colonne "pdt" ya=1 ya=0 7asb l seuil 
+#abel ken 7ateton bi tableau <50% aw >50%
+#eza seuil 3enda >0.25 7otelon bl pd valeur=1=maladie w eza seuil <0.25 7ot 0
+library(caret)
+pd4=ifelse(pdtbg_cas4[,2]>=0.2563815,"1","0")
+head(pd)
+#obligatoire de les transformer en facteurs
+pd4=as.factor(pd4)
+test$target=as.factor(test$target)
+head(test$target)
+head(pd4)
+length(pd4)
+# avoir tous les criteres d'evaluations et en prenant le seuil optimal
+mat =confusionMatrix(data=pd4,reference=test$target,positive="1")
+print(mat)
+#acc?s aux indicateurs globaux
+print(mat$overall)
+#par classe
+print(mat$byClass)
+#EXPLICATION SUR MATRICE DE CONFUSION:
+#Mcnemar's Test P-Value=si c'est significatif ou no
+#kappa= bta3tina l accuracy edech hiye reel par rapport a accuracy predit
+
+
+
+##################################################################################
+#################################################################################
+##################################################################################
+######################## CAS 5 : BAGGING USING "bagcontrol" function #############
+#En utilisant la fonction "bagcontrol" dans le  librairie "party" 
+# bagging avec 100 bootstraps
+# contructions de 100 arbres sans elagage#
+library(party)
+#pour savoir comment fonctionne la librairie bagging
+bagCtrl <- bagControl(fit = ctreeBag$fit,
+                      predict = ctreeBag$pred,
+                      aggregate = ctreeBag$aggregate)
+ctreeBag$aggregate
+#on prend toutes les variables sauf la variable cible
+bg_cas5 <- bag(x=train[,names(train)!="target"],y=train$target, data = train,
+               B= 100, bagControl = bagCtrl)
+print(bg_cas5)
+#on a reppetter l'arbre de decision 20 fois sans ellagage 
+#on peut voir la division et l'erreur oob  dans chaque fois
+bg_cas5$fits
+
+# validation du modele sur la partie test
+#en utilisant la fonction "predict" pour voir la prediction du model "bagging"
+#sur la partir test
+predicted=predict(bg_cas5, newdata=test,type="class")
+
+
+#methode 1 :pour l'erreur: pour trouver le tableau de prediction 
+#On peut changer les noms des colonnes : "reelle, prediction"
+mc_bg_cas5=round(100*table(test$target, predicted, dnn=c("reelle", "Predicted"))/length(predicted))
+mc_bg_cas5
+#puisqu'il existe 2 modalites --> 1=maladie et 0=pas de maladie
+err_bg_cas5=1-sum(diag(mc_bg_cas5))/sum(mc_bg_cas5)
+err_bg_cas5
+#choix de B selon l'erreur minimal
+
+#Methode 2: pour l'erreur : Courbe de Roc
+
+# Validation par la courbe ROC et AUC
+#Courbe Roc et AUC des forets par AD:arbre de decision.
+library(pROC)
+#abel kena 7atin type=class bas hone badna nechte8l 3ala l prob
+#on a transforme la variable cible target en prob
+pdtbg_cas5=predict(bg_cas5, test,type="prob")
+head(pdtbg_cas5)
+RCad= roc(test$target, pdtbg_cas5[,2])
+rocAD_BG = plot.roc(test$target, pdtbg_cas5[,2],
+                 main = " ROC  avec arbre de decision", 
+                 type="l", col="blue", grid=c(0.1,0.2),print.auc = TRUE) 
+
+
+# pour chercher le seuil optimal selon l'auc
+rocSeuil_BG <- plot.roc(test$target, pdtbg_cas5[,2],
+                     main = "Interval de confiance", 
+                     percent=TRUE,
+                     ci = TRUE,                  # compute AUC (of AUC by default)
+                     print.auc = TRUE)           # print the AUC (will contain the CI)
+# interval de confiance par Bootstrap B=100
+#il a repete 100 fois pour chercher l'interval de confidence
+ciobj_BG=ci.se(rocSeuil_BG,                         # CI of sensitivity
+            specificities = seq(0, 100, 2)) # over a select set of specificities
+
+# ajouter l'interval de confiance sur la courbe en bleu
+plot(ciobj_BG, type = "shape", col = "#1c61b6AA")  
+
+# ajouter le seuil optimal
+seuilbg_cas5=ci(rocSeuil_BG, of = "thresholds", thresholds = "best",percent=T);
+seuilbg_cas5
+plot(seuilbg_cas5)
+## Courbe Lift (l'objectif c'est qui sont les individus qui ont une maladie)
+datlift=data.frame(test$target,pdtbg_cas5[,2])
+head(datlift)
+
+#maintenant if faut transformer dans le but de classer 
+#classer selon la seuil si plus petit de cette seuil ou plus grand
+# tranformer y dans la partie test en facteur
+datlift$test.target=as.factor(datlift$test.target)
+head(datlift)
+# appliquer le lift 
+lift_obj <- lift(test.target ~ pdtbg_cas5...2., data=datlift, class="1")
+# afficher la proportion des personnes malade--> target=1.
+#on deduit des resultat 54.4% ont une maladie
+#hayda lmhem mn l lift_obj eno na3ref n2asemon
+print(lift_obj)
+# courbe lift
+plot(lift_obj)
+#La courbe est proche de la limite theorique 
+#Notre ciblage est d'excellente qualite.
+
+
+# matrice de confusion avec caret
+#ifelse hone hiye:
+#n7ot bi alb colonne "pdt" ya=1 ya=0 7asb l seuil 
+#abel ken 7ateton bi tableau <50% aw >50%
+#eza seuil 3enda >0.25 7otelon bl pd valeur=1=maladie w eza seuil <0.25 7ot 0
+library(caret)
+pd5=ifelse(pdtbg_cas5[,2]>=0.2563815,"1","0")
+head(pd5)
+#obligatoire de les transformer en facteurs
+pd5=as.factor(pd5)
+test$target=as.factor(test$target)
+head(test$target)
+head(pd5)
+length(pd5)
+# avoir tous les criteres d'evaluations et en prenant le seuil optimal
+mat =confusionMatrix(data=pd5,reference=test$target,positive="1")
+print(mat)
+#acc?s aux indicateurs globaux
+print(mat$overall)
+#par classe
+print(mat$byClass)
+#EXPLICATION SUR MATRICE DE CONFUSION:
+#Mcnemar's Test P-Value=si c'est significatif ou no
+#kappa= bta3tina l accuracy edech hiye reel par rapport a accuracy predit
+
+
+################################################################################
+################################################################################
+################################################################################
+
+
+#--------------------------------------------------------------------------------#
+#### ON COMPARE CES 5CAS SELON : ####
+# 1)L'erreur de la matrice
+# 2)La courbe de roc
+# 3)Selon le temps
+
+#POUR LES 4 CAS 
+# CAS1: B=nbr de boosting choisit aleatoirement -->B=20
+# CAS2: B=nbr de boosting choisit selon la cross validation our k=10
+# CAS3: B=nbr de boosting choisit selon la cross validation our k=5
+# CAS4: B=nbr de boosting choisit selon la methode "OOB"
+# CAS5: B=nbr de boosting choisit selon le graphe -->B-100
+
+
+
+# temps d'execusion 
+#install.packages("microbenchmark")
+library(microbenchmark)
+library("caret")
+timbag= microbenchmark(times=10,unit = "ms", 
+                       
+                       "bagParty_1"={bagCtrl <- bagControl(fit = ctreeBag$fit, predict = ctreeBag$pred, aggregate = ctreeBag$aggregate)
+                       bg <- bag(x=train[,names(train)!="target"],y=train$target, data = train,
+                                 B= 20, bagControl = bagCtrl)
+                       } ,
+                       
+                       "bagCaretCV10"={  trCtrl <- trainControl(method = "cv", number=10)
+                       bg2 <- train(x=train[,names(train)!="target"],y=train$target , data = train, 
+                                    method = "treebag", trControl = trCtrl, metric="Accuracy" )
+                       },   
+                       
+                       "bagCaretCV5"={  trCtrl <- trainControl(method = "cv", number=5)
+                       bg3 <- train(x=train[,names(train)!="target"],y=train$target , data = train, 
+                                    method = "treebag", trControl = trCtrl, metric="Accuracy" )
+                       },   
+                       
+                       "bagCaretOOB"={  trCtrl <- trainControl(method = "oob")
+                       bago <- train(x=train[,names(train)!="target"],y=train$target , data = train, method = "treebag", 
+                                     trControl = trCtrl, metric="Accuracy",keepX=T )
+                       },
+                       
+                       "bagParty_2"={ bagCtrl <- bagControl(fit = ctreeBag$fit,predict = ctreeBag$pred,aggregate = ctreeBag$aggregate)
+                       bg_cas5 <- bag(x=train[,names(train)!="target"],y=train$target, data = train,
+                                      B= 100, bagControl = bagCtrl)
+                         
+                       }
+)
+
+#pour comparer graphiquement le temps de chaque cas de bagging-->fonction "autoplot"
+#pour trouver la moyenne de temps de chaque cas de bagging-->fonction "summary"
+### c'est le temps d'excusion de chaque methode
+autoplot(timbag)
+summary(timbag)
+
+
+
+######################################################################################
+#####################################################################################
+####################################################################################
+#####################################################################################
+#####################################################################################
+
+
+
+##On utilise la meme partition utilise dans les 2 premiers modeles
+###1st: creer la partition
+data$target=as.factor(data$target)
+library(caret)
+set.seed(34)
+parts = createDataPartition(data$target, p =0.7, list = F)
+###2nd:creer la partie apprentissage
+train = data[parts, ]
+head(parts)
+###3rd:creeer la parite test
+test = data[-parts, ]
+
+###########################################################################
+###########################################################################
+
+################ MODEL 3: RANDOM FOREST ########################
+## le model "random forest" c'est un modele pour ameliorer l'arbre de decision
+## on peut l'appliquer en utilisant librairie "caret" ou librarie "randomforest"
+#### CAS 1 : USING "CARET" LIBRARY --> boite noir on ne peut pas savoir ntree 
+#### CAS 2 : UNSING "RANDOMFOREST" LIBRAR --> ntree= depends on oob error 
+#### CAS 3 : UNSING "RANDOMFOREST" et "TUNERF"  LIBRAR --> mtry= depends on oob error 
+######### CAS 2 & 3 C'EST SEULMENT POUR CHOISIR "NTREE" ET "MTRY" ######
+#### CAS 4 : UNSING "RANDOMFOREST" LIBRAR --> ntree= choosen randomlly et mtry=fix value
+#### CAS 5 : UNSING "RANDOMFOREST" LIBRAR --> ntree= choosen randomlly et mtry=fix value
+#### CAS 6 : UNSING "RANDOMFOREST" LIBRAR --> ntree= choosen randomlly et mtry=fix value
+#### CAS 7 : UNSING "RANDOMFOREST" LIBRAR --> ntree= choosen randomlly et mtry=fix value
+
+
+#### GRAPHIQUEMENT: valeur minimale de oob c'est pour "ntree=50"
+# CAS 4 # ---> on constate que "ntree"=50 (MIN ERROR)
+# CAS 5 # ---> on constate que "ntree" a une intervalle Max = [0;40]
+# CAS 6 # ---> on constate que "ntree" a une intervalle constante = [150;300]
+# CAS 7 # ---> on constate que "ntree" doit avoir une intervalle= [300;500]
+
+
+
+# RQ: librairie "caret" est seulment utilisee dans donnee de petite taille
+# car si la taille du "Training set" est grande --> ella va prendre beaucoup 
+#de temps a executer c'est pourcela il est preferable de travailler avec le 2eme cas
+
+# RQ: librairie "randomForest" depend aux 2 parametres :
+##  1) ntree= nbr de division selon l'erreur oob'
+##  2) mtry= nbr de variable prit dans le random forest
+
+
+##################################################################
+###################### MODEL 3: RANDOME FOREST ##################
+#### CAS 1 : USING "CARET" LIBRARY --> boite noir on ne peut pas savoir ntree ################
+
+#on prend toutes les variables sauf la variable cible
+library(randomForest)
+ranfo_cas1=train(x=train[,names(train)!="target"],y=train$target, data=train,method="rf")
+
+#accuracy & kappa should be near =1 pour quelle soit optimal
+#Dans notre base de donnee existes 13 variables explicatives alors en utilisant print(ranfo_cas1)
+#on peut voir le nombre de mtry=2 ou mtry=7 ou mtry=13 ( 3 possibilites )
+### MAIN ATTENTION si mtry=13 --> pas d'elimination de variables--> arbre de decision (pas random forest)
+### L'important c'est de prendre mtry<13 et mtry>1 ( on ne peut pas travailler pas une variables explicative)
+
+print(ranfo_cas1)
+plot(ranfo_cas1)
+# meilleur parametre mtry
+ranfo_cas1$bestTune
+# modele optimal : nous donne l'erreur "OOB" et "matrice de confusion"!
+print(ranfo_cas1$finalModel)
+# variables importance du modele final
+varImp(ranfo_cas1$finalModel)
+# variables importances des Forets aleatoires par modalite de la variable cible
+varImp(ranfo_cas1)
+###trouver les variables les plus importantes selon la variable cible "target"
+#methode: random forest en utilisant fct "varImp"
+dt1_importance_rf_cas1 <- varImp(ranfo_cas1)
+
+
+#methode 1: pour visualiser les variables importantes a ce modele
+###trouver les variables les plus importantes pour ce modele
+#selon la methode: random forest en utilisant fct "varImp"
+dt_importance_rf_cas1 <- varImp(ranfo_cas1)
+# Create plot of importance of variables(to visualize which variables affects the most)
+ggplot(data = dt_importance_rf_cas1, mapping = aes(x = dt_importance_rf_cas1[,1])) + # Data & mapping
+  geom_boxplot() + # Create box plot
+  geom_bar(stat="identity", fill="lightblue", colour="black")+
+  labs(title = "Variable importance: Decision tree model") + # Title
+  theme_light() # Theme
+
+# methode 2: pour visualiser les variables importantes 
+plot(varImp(ranfo_cas1))
+
+# pour savoir l'accuracy du modele "random forest"
+max(ranfo_cas1$results$Accuracy)
+#matrice de confusion partie test et erreur de classement.
+prf_cas1=predict(ranfo_cas1,newdata = test)
+mrf_cas1=round(100*table(test$target, prf_cas1, dnn=c("reelle", "Predicted"))/length(prf_cas1))
+mrf_cas1
+s=sum(diag(mrf_cas1))
+err_rf_cas1=1-s/sum(mrf_cas1)
+err_rf_cas1
+
+#Methode 2: pour l'erreur : Courbe de Roc
+
+# Validation par la courbe ROC et AUC
+#Courbe Roc et AUC des forets par AD:arbre de decision.
+library(pROC)
+#abel kena 7atin type=class bas hone badna nechte8l 3ala l prob
+#on a transforme la variable cible target en prob
+pdtrf_cas1=predict(ranfo_cas1, test,type="prob")
+head(pdtrf_cas1)
+RCad= roc(test$target, pdtrf_cas1[,2])
+rocAD = plot.roc(test$target, pdtrf_cas1[,2],
+                 main = " ROC  avec arbre de decision", 
+                 type="l", col="blue", grid=c(0.1,0.2),print.auc = TRUE) 
+
+
+# pour chercher le seuil optimal selon l'auc
+rocSeuil <- plot.roc(test$target, pdtrf_cas1[,2],
+                     main = "Interval de confiance", 
+                     percent=TRUE,
+                     ci = TRUE,                  # compute AUC (of AUC by default)
+                     print.auc = TRUE)           # print the AUC (will contain the CI)
+# interval de confiance par Bootstrap B=100
+#il a repete 100 fois pour chercher l'interval de confidence
+ciobj=ci.se(rocSeuil,                         # CI of sensitivity
+            specificities = seq(0, 100, 2)) # over a select set of specificities
+
+# ajouter l'interval de confiance sur la courbe en bleu
+plot(ciobj, type = "shape", col = "#1c61b6AA")  
+
+# ajouter le seuil optimal
+pdtrf_cas1=ci(rocSeuil, of = "thresholds", thresholds = "best",percent=T);
+pdtrf_cas1
+plot(pdtrf_cas1)
+
+
+####################################################################################
+###################################################################################
+
+
+###################### MODEL 3: RANDOME FOREST ##################
+#### CAS 2 : UNSING "RANDOMFOREST" LIBRAR --> ntree= depends on oob error 
+##Danc ce cas il prend by default : ntree=500 & mtry=2 on va voir la valeur optimale de ntree
+# mais tout d'abord on doit mettre une valeure de "ntree" et "mtry"
+##Faire l'etude pour savoir quelle est l'intervalle optimal de "ntree"
+
+library(randomForest)
+rf_cas2= randomForest(target~.,data=train, ntree=500,mtry=2,importance=TRUE,proximity=TRUE)
+#pour voir le modele et la "matrice de confusion" :
+print(rf_cas2)
+#on peur voir tous les possibilites de ce modele
+## par exemple MSE ,les variables impo dans ce modele
+attributes(rf_cas2)
+rf_cas2$importance
+
+#Methode 1: pour visualiser les erreurs selon la valeur de ntree
+#on peurt visualiser l'erreur par rapport a ntree
+#on constate : quand ntree depasse 150 alors l'erreur sera constante -->ntree>=150
+#### Donc ntree optimal doit etre >150
+plot(rf_cas2)
+
+#Methode 2: pour visualiser la frequences par rapport a ntree
+hist(treesize(rf_cas2), main = "nombre des noeuds par arbre", col ="lightblue")
+# variables importances des Forets aleatoires par modalite de la variable cible
+varImp(rf_cas2)
+###trouver les variables les plus importantes selon la variable cible "target"
+#methode: random forest en utilisant fct "varImp"
+dt2_importance_rf_cas2 <- varImp(rf_cas2)
+
+#pour visualiser l'importance des variables par l'ordre croissant
+varImpPlot(rf_cas2, sort=TRUE,main= "sort n.var main Variable Importance")
+
+rf_cas2$err.rate
+## choix nombre de tree
+oob.error.data <- data.frame(
+  Trees=rep(1:nrow(rf_cas2$err.rate), times=3),
+  Type=rep(c("OOB", "0", "1"), each=nrow(rf_cas2$err.rate)),
+  Error=c(rf_cas2$err.rate[,"OOB"], 
+          rf_cas2$err.rate[,"0"], 
+          rf_cas2$err.rate[,"1"]))
+
+ggplot(data=oob.error.data, aes(x=Trees, y=Error)) +
+  geom_line(aes(color=Type))
+
+
+############################################################################
+############################################################################
+
+############################################################################
+###################### MODEL 3: RANDOME FOREST ############################
+#### CAS 3 : UNSING "RANDOMFOREST" et "TUNERF" --> mtry= depends on nbr of explicative var& oob error
+###Faire l'etude pour savoir quel est la valeur optimal de "mtry"
+###choie mtry optimal , nombre des variables considerees ds chq etape
+
+#Prenons toutes ls variables explicatives (sans la variable cible "target")
+###choix mtry optimal , nombre des variables considerees ds chq etape
+T=tuneRF(train[,-14], train[,14], stepFactor = 0.5, plot = TRUE, ntreeTry =300, trace=TRUE, improve= 0.05)
+T
+#### --> on constate oobminimal pour mtry=1 ou mtry=14 (ou mtry=6 OU mtry=12....)
+## Mais bien sur qu'on ne peut pas travailler avec mtry=1
+## Mais bien sur qu'on ne peut pas travailler avec mtry=14 car c'est arbre de decision !
+#### solution optimal c'est de choisir le min(oob.values)
+
+## a chaque etape on peut voir l'erreur selon le changement de "mtry"
+# un compteur i=1-->13 (nbr des variables explicatives=13) pour ntree=300
+# a chaque fois on change la valaue de mtry pour voir le changement d'erreur "OOB"
+oob.values <- vector(length=13)
+for(i in 1:13) {
+  temp.model <- randomForest(target ~ ., data=train, mtry=i, ntree=300)
+  oob.values[i] <- temp.model$err.rate[nrow(temp.model$err.rate),1]
+}
+## on constate que l'erreur OOB varienet quant mtry varie 
+oob.values
+## find the minimum error
+min(oob.values)
+## find the optimal value for mtry...MAIS BIEN SUR ON NE PREND PAS mtry=1
+which(oob.values == min(oob.values))
+## create a model for proximities using the best value for mtry
+#### prenons mtry=2 ou 3 --> correspond a l'erreur minimal oob
+model <- randomForest(target ~ ., 
+                      data=train,
+                      ntree=300, 
+                      proximity =TRUE, 
+                      mtry=3)
+#pour voir l'erreur de ce model choisit cas 3 :
+#### on peut tirer la matrice de confisuion
+model
+
+# on peut voir la variation des erreur selon ntree
+plot(model)
+
+
+#########################################################################
+#########################################################################
+#### MAINTENANT PRENANT DES DIFFERENTES cas--> CAS 4 :
+## cas 4-1: ntree=50 & mtry=2
+## cas 4-2: ntree=50 & mtry=5 
+## cas 4-3: ntree=50 & mtry=13 (MAX OOB ERROR)
+
+# Evaluant ntree en Random Forest.
+rf_cas_4= randomForest(target~.,data=train,mtry=2,ntree=500)
+rf_cas_4$ntree
+
+plot(rf_cas_4$err.rate[, 1], type = "l", xlab = "nombre d'arbres",
+     ylab = "erreur OOB")
+rf_cas_4_1= randomForest(target~.,data=train,mtry=2,ntree=50)
+rf_cas_4_2= randomForest(target~.,data=train,mtry=5,ntree=50)
+rf_cas_4_3= randomForest(target~.,data=train,mtry=13,ntree=50)
+# Etude de temps de calcul pour chaque modele selon mtree. 
+#install.packages("microbenchmark")
+library(microbenchmark)
+timB_cas4 <- microbenchmark(times = 10,
+                       rf_cas_4_1= randomForest(target~.,data=train,mtry=2,ntree=50),
+                       rf_cas_4_2= randomForest(target~.,data=train,mtry=5,ntree=50),
+                       rf_cas_4_3= randomForest(target~.,data=train,mtry=13,ntree=50))
+timB_cas4
+autoplot(timB_cas4)
+
+# Evaluant mtry en Random Forest.
+# mtry valeur par defaut.
+rf_cas_4_1= randomForest(target~.,data=train,mtry=2,ntree=50)
+#mtry double de la valeur par defaut.
+rf_cas_4_2= randomForest(target~.,data=train,mtry=4,ntree=50)
+# mtry moitie de la valeur par defaut arrondie
+rf_cas_4_3= randomForest(target~.,data=train,mtry=1,ntree=50)
+mean(rf_cas_4_1$err.rate[,1])
+mean(rf_cas_4_2$err.rate[,1])
+mean(rf_cas_4_3$err.rate[,1])
+
+#modele Final de randomForest.--> CAS 4-1 (min error)
+rff_cas4=randomForest(target~.,data=train,mtry=2,ntree=50, proximity=TRUE)
+# variables importantes.
+varImpPlot(rff_cas4, sort=TRUE,main= "sort n.var main Variable Importance")
+
+#validation de randomForest.
+prff_cas4=predict(rff_cas4,test)
+mrff_cas4=round(100*table(test$target, prff_cas4, dnn=c("reelle", "Predicted"))/length(prff_cas4))
+mrff_cas4
+err_cas4=1-(sum(diag(mrff_cas4))/sum(mrff_cas4))
+err_cas4
+###les variables importantes pour ce modele
+varImpPlot(rff_cas4, sort=TRUE,main= "sort n.var main Variable Importance")
+
+##la matrice de confusion et l'accuracy
+confusionMatrix(prff_cas4,test$target)
+
+#Methode 2: pour l'erreur : Courbe de Roc
+
+# Validation par la courbe ROC et AUC
+#Courbe Roc et AUC des forets par AD:arbre de decision.
+library(pROC)
+#abel kena 7atin type=class bas hone badna nechte8l 3ala l prob
+#on a transforme la variable cible target en prob
+pdtrf_cas4=predict(rff_cas4, test,type="prob")
+head(pdtrf_cas4)
+RCad= roc(test$target, pdtrf_cas4[,2])
+rocAD = plot.roc(test$target, pdtrf_cas4[,2],
+                 main = " ROC  avec arbre de decision", 
+                 type="l", col="blue", grid=c(0.1,0.2),print.auc = TRUE) 
+
+
+# pour chercher le seuil optimal selon l'auc
+rocSeuil <- plot.roc(test$target, pdtrf_cas4[,2],
+                     main = "Interval de confiance", 
+                     percent=TRUE,
+                     ci = TRUE,                  # compute AUC (of AUC by default)
+                     print.auc = TRUE)           # print the AUC (will contain the CI)
+# interval de confiance par Bootstrap B=100
+#il a repete 100 fois pour chercher l'interval de confidence
+ciobj=ci.se(rocSeuil,                         # CI of sensitivity
+            specificities = seq(0, 100, 2)) # over a select set of specificities
+
+# ajouter l'interval de confiance sur la courbe en bleu
+plot(ciobj, type = "shape", col = "#1c61b6AA")  
+
+# ajouter le seuil optimal
+pdtrf_cas4=ci(rocSeuil, of = "thresholds", thresholds = "best",percent=T);
+pdtrf_cas4
+plot(pdtrf_cas4)
+
+
+
+#########################################################################
+#########################################################################
+#### MAINTENANT PRENANT DES DIFFERENTES cas--> CAS 5 :
+## cas 5-1: ntree=30 & mtry=2
+## cas 5-2: ntree=30 & mtry=5 
+## cas 5-3: ntree=30 & mtry=13 (MAX OOB ERROR)
+
+# Evaluant ntree en Random Forest.
+rf_cas_5= randomForest(target~.,data=train,mtry=2,ntree=500)
+rf_cas_5$ntree
+
+plot(rf_cas_5$err.rate[, 1], type = "l", xlab = "nombre d'arbres",
+     ylab = "erreur OOB")
+rf_cas_5_1= randomForest(target~.,data=train,mtry=2,ntree=30)
+rf_cas_5_2= randomForest(target~.,data=train,mtry=5,ntree=30)
+rf_cas_5_3= randomForest(target~.,data=train,mtry=13,ntree=30)
+# Etude de temps de calcul pour chaque modele selon mtree. 
+#install.packages("microbenchmark")
+library(microbenchmark)
+timB_cas5 <- microbenchmark(times = 10,
+                            rf_cas_5_1= randomForest(target~.,data=train,mtry=2,ntree=30),
+                            rf_cas_5_2= randomForest(target~.,data=train,mtry=5,ntree=30),
+                            rf_cas_5_3= randomForest(target~.,data=train,mtry=13,ntree=30))
+timB_cas5
+autoplot(timB_cas5)
+
+# Evaluant mtry en Random Forest.
+# mtry valeur par defaut.
+rf_cas_5_1= randomForest(target~.,data=train,mtry=2,ntree=30)
+#mtry double de la valeur par defaut.
+rf_cas_5_2= randomForest(target~.,data=train,mtry=4,ntree=30)
+# mtry moitie de la valeur par defaut arrondie
+rf_cas_5_3= randomForest(target~.,data=train,mtry=13,ntree=50)
+mean(rf_cas_5_1$err.rate[,1])
+mean(rf_cas_5_2$err.rate[,1])
+mean(rf_cas_5_3$err.rate[,1])
+
+#modele Final de randomForest.--> CAS 5-1 (min error)
+rff_cas5=randomForest(target~.,data=train,mtry=2,ntree=50, proximity=TRUE)
+# variables importantes.
+varImpPlot(rff_cas5, sort=TRUE,main= "sort n.var main Variable Importance")
+
+#validation de randomForest.
+prff_cas5=predict(rff_cas5,test)
+mrff_cas5=round(100*table(test$target, prff_cas5, dnn=c("reelle", "Predicted"))/length(prff_cas5))
+mrff_cas5
+err_cas5=1-(sum(diag(mrff_cas5))/sum(mrff_cas5))
+err_cas5
+###les variables importantes pour ce modele
+varImpPlot(rff_cas5, sort=TRUE,main= "sort n.var main Variable Importance")
+
+##la matrice de confusion et l'accuracy
+confusionMatrix(prff_cas5,test$target)
+
+#Methode 2: pour l'erreur : Courbe de Roc
+
+# Validation par la courbe ROC et AUC
+#Courbe Roc et AUC des forets par AD:arbre de decision.
+library(pROC)
+#abel kena 7atin type=class bas hone badna nechte8l 3ala l prob
+#on a transforme la variable cible target en prob
+pdtrf_cas5=predict(rff_cas5, test,type="prob")
+head(pdtrf_cas5)
+RCad= roc(test$target, pdtrf_cas5[,2])
+rocAD = plot.roc(test$target, pdtrf_cas5[,2],
+                 main = " ROC  avec arbre de decision", 
+                 type="l", col="blue", grid=c(0.1,0.2),print.auc = TRUE) 
+
+
+# pour chercher le seuil optimal selon l'auc
+rocSeuil <- plot.roc(test$target, pdtrf_cas5[,2],
+                     main = "Interval de confiance", 
+                     percent=TRUE,
+                     ci = TRUE,                  # compute AUC (of AUC by default)
+                     print.auc = TRUE)           # print the AUC (will contain the CI)
+# interval de confiance par Bootstrap B=100
+#il a repete 100 fois pour chercher l'interval de confidence
+ciobj=ci.se(rocSeuil,                         # CI of sensitivity
+            specificities = seq(0, 100, 2)) # over a select set of specificities
+
+# ajouter l'interval de confiance sur la courbe en bleu
+plot(ciobj, type = "shape", col = "#1c61b6AA")  
+
+# ajouter le seuil optimal
+pdtrf_cas5=ci(rocSeuil, of = "thresholds", thresholds = "best",percent=T);
+pdtrf_cas5
+plot(pdtrf_cas5)
+
+
+
+
+#########################################################################
+#########################################################################
+#### MAINTENANT PRENANT DES DIFFERENTES cas--> CAS 6 :
+## cas 6-1: ntree=200 & mtry=2
+## cas 6-2: ntree=200 & mtry=5 
+## cas 6-3: ntree=200 & mtry=13 (MAX OOB ERROR)
+
+
+# Evaluant ntree en Random Forest.
+rf_cas_6= randomForest(target~.,data=train,mtry=2,ntree=500)
+rf_cas_6$ntree
+
+plot(rf_cas_6$err.rate[, 1], type = "l", xlab = "nombre d'arbres",
+     ylab = "erreur OOB")
+rf_cas_6_1= randomForest(target~.,data=train,mtry=2,ntree=200)
+rf_cas_6_2= randomForest(target~.,data=train,mtry=5,ntree=200)
+rf_cas_6_3= randomForest(target~.,data=train,mtry=13,ntree=200)
+# Etude de temps de calcul pour chaque modele selon mtree. 
+#install.packages("microbenchmark")
+library(microbenchmark)
+timB_cas6 <- microbenchmark(times = 10,
+                            rf_cas_6_1= randomForest(target~.,data=train,mtry=2,ntree=200),
+                            rf_cas_6_2= randomForest(target~.,data=train,mtry=5,ntree=200),
+                            rf_cas_6_3= randomForest(target~.,data=train,mtry=13,ntree=200))
+timB_cas6
+autoplot(timB_cas6)
+
+# Evaluant mtry en Random Forest.
+# mtry valeur par defaut.
+rf_cas_6_1= randomForest(target~.,data=train,mtry=2,ntree=200)
+#mtry double de la valeur par defaut.
+rf_cas_6_2= randomForest(target~.,data=train,mtry=4,ntree=200)
+# mtry moitie de la valeur par defaut arrondie
+rf_cas_6_3= randomForest(target~.,data=train,mtry=13,ntree=200)
+mean(rf_cas_6_1$err.rate[,1])
+mean(rf_cas_6_2$err.rate[,1])
+mean(rf_cas_6_3$err.rate[,1])
+
+#modele Final de randomForest.--> CAS 6-1 (min error)
+rff_cas6=randomForest(target~.,data=train,mtry=2,ntree=200, proximity=TRUE)
+# variables importantes.
+varImpPlot(rff_cas6, sort=TRUE,main= "sort n.var main Variable Importance")
+
+#validation de randomForest.
+prff_cas6=predict(rff_cas6,test)
+mrff_cas6=round(100*table(test$target, prff_cas6, dnn=c("reelle", "Predicted"))/length(prff_cas6))
+mrff_cas6
+err_cas6=1-(sum(diag(mrff_cas6))/sum(mrff_cas6))
+err_cas6
+###les variables importantes pour ce modele
+varImpPlot(rff_cas6, sort=TRUE,main= "sort n.var main Variable Importance")
+
+##la matrice de confusion et l'accuracy
+confusionMatrix(prff_cas6,test$target)
+
+#Methode 2: pour l'erreur : Courbe de Roc
+
+# Validation par la courbe ROC et AUC
+#Courbe Roc et AUC des forets par AD:arbre de decision.
+library(pROC)
+#abel kena 7atin type=class bas hone badna nechte8l 3ala l prob
+#on a transforme la variable cible target en prob
+pdtrf_cas6=predict(rff_cas6, test,type="prob")
+head(pdtrf_cas6)
+RCad= roc(test$target, pdtrf_cas6[,2])
+rocAD = plot.roc(test$target, pdtrf_cas6[,2],
+                 main = " ROC  avec arbre de decision", 
+                 type="l", col="blue", grid=c(0.1,0.2),print.auc = TRUE) 
+
+
+# pour chercher le seuil optimal selon l'auc
+rocSeuil <- plot.roc(test$target, pdtrf_cas6[,2],
+                     main = "Interval de confiance", 
+                     percent=TRUE,
+                     ci = TRUE,                  # compute AUC (of AUC by default)
+                     print.auc = TRUE)           # print the AUC (will contain the CI)
+# interval de confiance par Bootstrap B=100
+#il a repete 100 fois pour chercher l'interval de confidence
+ciobj=ci.se(rocSeuil,                         # CI of sensitivity
+            specificities = seq(0, 100, 2)) # over a select set of specificities
+
+# ajouter l'interval de confiance sur la courbe en bleu
+plot(ciobj, type = "shape", col = "#1c61b6AA")  
+
+# ajouter le seuil optimal
+pdtrf_cas6=ci(rocSeuil, of = "thresholds", thresholds = "best",percent=T);
+pdtrf_cas6
+plot(pdtrf_cas6)
+
+
+
+
+#########################################################################
+#########################################################################
+#### MAINTENANT PRENANT DES DIFFERENTES cas--> CAS 7 :
+## cas 7-1: ntree=400 & mtry=2
+## cas 7-2: ntree=400 & mtry=5 
+## cas 7-3: ntree=400 & mtry=13 (MAX OOB ERROR)
+
+# Evaluant ntree en Random Forest.
+rf_cas_7= randomForest(target~.,data=train,mtry=2,ntree=500)
+rf_cas_7$ntree
+
+plot(rf_cas_7$err.rate[, 1], type = "l", xlab = "nombre d'arbres",
+     ylab = "erreur OOB")
+rf_cas_7_1= randomForest(target~.,data=train,mtry=2,ntree=400)
+rf_cas_7_2= randomForest(target~.,data=train,mtry=5,ntree=400)
+rf_cas_7_3= randomForest(target~.,data=train,mtry=13,ntree=400)
+# Etude de temps de calcul pour chaque modele selon mtree. 
+#install.packages("microbenchmark")
+library(microbenchmark)
+timB_cas7 <- microbenchmark(times = 10,
+                            rf_cas_7_1= randomForest(target~.,data=train,mtry=2,ntree=400),
+                            rf_cas_7_2= randomForest(target~.,data=train,mtry=5,ntree=400),
+                            rf_cas_7_3= randomForest(target~.,data=train,mtry=13,ntree=400))
+timB_cas7
+autoplot(timB_cas7)
+
+# Evaluant mtry en Random Forest.
+# mtry valeur par defaut.
+rf_cas_7_1= randomForest(target~.,data=train,mtry=2,ntree=400)
+#mtry double de la valeur par defaut.
+rf_cas_7_2= randomForest(target~.,data=train,mtry=4,ntree=400)
+# mtry moitie de la valeur par defaut arrondie
+rf_cas_7_3= randomForest(target~.,data=train,mtry=13,ntree=400)
+mean(rf_cas_7_1$err.rate[,1])
+mean(rf_cas_7_2$err.rate[,1])
+mean(rf_cas_7_3$err.rate[,1])
+
+#modele Final de randomForest.--> CAS 7-1 (min error)
+rff_cas7=randomForest(target~.,data=train,mtry=2,ntree=200, proximity=TRUE)
+# variables importantes pour ce modele
+varImpPlot(rff_cas7, sort=TRUE,main= "sort n.var main Variable Importance")
+
+#validation de randomForest.
+prff_cas7=predict(rff_cas7,test)
+mrff_cas7=round(100*table(test$target, prff_cas7, dnn=c("reelle", "Predicted"))/length(prff_cas7))
+mrff_cas7
+err_cas7=1-(sum(diag(mrff_cas7))/sum(mrff_cas7))
+err_cas7
+
+##la matrice de confusion et l'accuracy
+confusionMatrix(prff_cas7,test$target)
+
+#Methode 2: pour l'erreur : Courbe de Roc
+
+# Validation par la courbe ROC et AUC
+#Courbe Roc et AUC des forets par AD:arbre de decision.
+library(pROC)
+#abel kena 7atin type=class bas hone badna nechte8l 3ala l prob
+#on a transforme la variable cible target en prob
+pdtrf_cas7=predict(rff_cas7, test,type="prob")
+head(pdtrf_cas7)
+RCad= roc(test$target, pdtrf_cas7[,2])
+rocAD = plot.roc(test$target, pdtrf_cas7[,2],
+                 main = " ROC  avec arbre de decision", 
+                 type="l", col="blue", grid=c(0.1,0.2),print.auc = TRUE) 
+
+
+# pour chercher le seuil optimal selon l'auc
+rocSeuil <- plot.roc(test$target, pdtrf_cas7[,2],
+                     main = "Interval de confiance", 
+                     percent=TRUE,
+                     ci = TRUE,                  # compute AUC (of AUC by default)
+                     print.auc = TRUE)           # print the AUC (will contain the CI)
+# interval de confiance par Bootstrap B=100
+#il a repete 100 fois pour chercher l'interval de confidence
+ciobj=ci.se(rocSeuil,                         # CI of sensitivity
+            specificities = seq(0, 100, 2)) # over a select set of specificities
+
+# ajouter l'interval de confiance sur la courbe en bleu
+plot(ciobj, type = "shape", col = "#1c61b6AA")  
+
+# ajouter le seuil optimal
+pdtrf_cas7=ci(rocSeuil, of = "thresholds", thresholds = "best",percent=T);
+pdtrf_cas7
+plot(pdtrf_cas7)
+
+
+####################################################################################
+##################################################################################
+#################################################################################
+##################################################################################
+
+
+##On utilise la meme partition utilise dans les 2 premiers modeles
+###1st: creer la partition
+data$target=as.factor(data$target)
+library(caret)
+set.seed(34)
+parts = createDataPartition(data$target, p =0.7, list = F)
+###2nd:creer la partie apprentissage
+train = data[parts, ]
+head(parts)
+###3rd:creeer la parite test
+test = data[-parts, ]
+
+###########################################################################
+###########################################################################
+
+
+
+
+
+
+
+
+################# MODEL 4 : BOOSTING ####################################
+####### CAS 1 : BOOSTING USING LIBRARY "adabeg" 
+####### CAS 2 : BOOSTING USING "tune,yardstick,resample,worflows,..."
+
+
+
+############################### CAS 1 : BOOSTING #############################
+## tout d'abord on va choisir le parametre mfinal=100
+## ensuite on va tester la valeur optimal de mfinal pour obtenir le meilleur modele
+
+
+## EXPLICATION: 1)mfinal= nbr d'iteration ou de segmentation
+##              2)coeflearn= c.a.d. la variable multiclass
+##                           coeflearn="Brieman" par default
+##                          coeflearn="Zhu" lorsqye la variable cible a modalites>2
+##              3)boos=False pour travailler par boosting 
+##              3)boos-True pour travailler par bagging
+
+
+library(adabag)
+############### mfinal=nbr d'iteration ou de segmentation
+modelboost <- boosting(target ~ ., data = train, mfinal=100,coeflearn='Breiman',boos=FALSE)
+# c'est le succes de l'observation si il appartient a la 1er modalite ou 2eme 
+# ici on 2 modalites 1=malade ; 0=pas de maladie
+modelboost$votes
+# class de ce model utilise 1er class correspond pour le setosa
+# le 2eme class correspond pour versicolor et le 3eme pour virginica
+modelboost$class
+# ce sont les poid utilises pour faire la ponderation
+modelboost$weights
+# les variables importantes pour savoir le type (la variable cible)
+modelboost$importance
+importanceplot(modelboost)
+
+#prediction sur echatillon test 
+pboosting <- predict(modelboost,newdata=test)
+pboosting$class
+# erreur dans librairie adabag
+pboosting$error
+###matrice de confusion: on peut tirer l'erreur du matrice en calculant err?
+pboosting$confusion
+# erreur sur la partie test
+tb=table(test$target,pboosting$class)
+err=1-(sum(diag(tb))/sum(tb))
+err
+#############
+
+### pour choisir le nbr des arbre ou le nbr d'iteration mfinal=?
+# un compteur qui prend les differentes valeurs de mt==mfinal=nbr de segementation
+# choix des arbres
+mt <- c(1,5,10,20,50,100)
+#apprentissage-test--> choisir mfinal=?
+ttb <- function(m){
+  bo <- boosting(target ~ .,data=train,mfinal=m,coeflearn='Breiman',boss=F)
+  predbo <- predict(bo,newdata = test)
+  return(predbo$error)
+}
+#on reppete 5 fois pour mt=une valeur de la sequence (1,5,10,20,50,100)
+#evaluation 5 fois de chaque valeur de m
+result <- replicate(5,sapply(mt,ttb))
+#on a reppete le boosting 5 fois pour mfinal=1
+#on a reppete le boosting 5 fois pour mfinal=5
+# et de meme 5 fois pour les autre valeur de mt
+
+#graphe pour voir l'erreur oob de chaque valeur de mfinal
+## on deduit alors que l'erreur minimal --> mfinal=20
+plot(mt,apply(result,1,mean),xlab="m",ylab="Err. rate",type="b")
+#pour voir les resultats de chaque valeur
+result
+
+#on a deduit la valeur optimal de mfinal pour le boosting alors maintenant on va changer
+#les parametres de l'arbre de decision 
+
+#parametres de construction de l'arbre 
+# maxdepth=la profondeur maximale des arbres.
+##minbucket= minimal observation ds le segment terminal
+
+
+parm =list(cp=0.1,maxdepth=5,minbucket=5)
+#boosting avec 50 decision stump (puisque mfinal=50 correspond a l'erreur minimal de boosting)
+stump.boosting <- boosting(target~ ., data = train, mfinal=20, coeflearn='Breiman',control=parm,boss=F) 
+stump.boosting$trees
+stump.boosting$importance
+importanceplot(modelboost)
+###prediction
+#prediction sur echatillon test pour obtenir la matrice de confusion
+stboostingpred <- predict(stump.boosting,newdata=test)
+stboostingpred$confusion
+stboostingpred$error
+
+library(pROC)
+#abel kena 7atin type=class bas hone badna nechte8l 3ala l prob
+#on a transforme la variable cible target en prob
+boosting.prd=predict(stump.boosting, test,type="prob")
+head(boosting.prd)
+RCad_BOS= roc(test$target, boosting.prd$prob[,2])
+rocAD = plot.roc(test$target, boosting.prd$prob[,2],
+                 main = " ROC  avec arbre de decision", 
+                 type="l", col="blue", grid=c(0.1,0.2),print.auc = TRUE) 
+# pour chercher le seuil optimal selon l'auc
+rocSeuil_BOS <- plot.roc(test$target, boosting.prd$prob[,2],
+                     main = "Interval de confiance", 
+                     percent=TRUE,
+                     ci = TRUE,                  # compute AUC (of AUC by default)
+                     print.auc = TRUE)           # print the AUC (will contain the CI)
+# interval de confiance par Bootstrap B=100
+#il a repete 100 fois pour chercher l'interval de confidence
+ciobj_BOS=ci.se(rocSeuil_BOS,                         # CI of sensitivity
+            specificities = seq(0, 100, 2)) # over a select set of specificities
+
+# ajouter l'interval de confiance sur la courbe en bleu
+plot(ciobj_BOS, type = "shape", col = "#1c61b6AA")  
+
+# ajouter le seuil optimal
+boosting.prd_seuil=ci(rocSeuil_BOS, of = "thresholds", thresholds = "best",percent=T);
+boosting.prd_seuil
+plot(boosting.prd_seuil)
+
+
+#############################################################################
+#############################################################################
+########################## FINALEMENT ################################
+####### TRACONS TOUTES LES COURBES DE ROC DANS UNE SEULE FIGURE #######
+
+# charger les données et les diviser en ensembles d'entraînement et de test
+data=as.data.frame(data)
+data$target=as.factor(data$target) 
+###1st: creer la partition
+set.seed(34)
+x <- data[, 1:13]
+y <- data$target
+train.index <- sample(1:nrow(x), 0.7*nrow(x))
+x.train <- x[train.index, ]
+y.train <- y[train.index]
+x.test <- x[-train.index, ]
+y.test <- y[-train.index]
+
+
+# entraîner les modèles
+library(rpart)
+library(randomForest)
+library(adabag)
+library(gbm)
+
+
+######################## LE MODELE OPTIMALE ###################
+######## MODELE CAS 1: ARBRE DE DECISION ###############
+library(rpart)
+library(pROC)
+library(ROCR)
+# ETAPE 1: algorithme du modele "arbre de decision"
+dendri_cas1 <- rpart(target~., data=train, method="class", control=rpart.control(minsplit=5,cp=0))
+cp.select <- function(big.tree)
+{
+  min.x <- which.min(big.tree$cptable[, 4]) 
+  for(i in  1: nrow(big.tree$cptable))
+  {
+    if(big.tree$cptable[i,4] < big.tree$cptable[min.x,4]+ big.tree$cptable[min.x, 5]) 
+      return(big.tree$cptable[i, 1])
+  }
+}
+# ETAPE 2: Quelle la valeur optimale de cp 
+cp.select(dendri_cas1)
+# ETAPE 3: Reconstruction du model en utilisant le cp optimal
+dendrp_cas1 <- prune(dendri_cas1, cp = cp.select(dendri_cas1))
+# ETAPE 4: Faire la prediction du modele en utilisant "predict"
+tree.probas <- predict(dendrp_cas1, newdata = x.test, type = "prob")[, 2]
+# ETAPE 5: Trouver le performance du modele (True Positive & Positive True)
+tree.pred <- prediction(tree.probas, y.test)
+tree.perf <- performance(tree.pred, "tpr", "fpr")
+
+
+######################## LE MODELE OPTIMALE ###################
+########## MODELE 2: BAGGING ###############
+library(party)
+#pour savoir comment fonctionne la librairie bagging
+bagCtrl <- bagControl(fit = ctreeBag$fit,
+                      predict = ctreeBag$pred,
+                      aggregate = ctreeBag$aggregate)
+# ETAPE 1: Algorithme du modele "BAGGING"
+bg_cas5 <- bag(x=train[,names(train)!="target"],y=train$target, data = train,
+               B= 100, bagControl = bagCtrl)
+# ETAPE 2: Faire la prediction du modele en utilisant "predict" 
+bagging.probas <- predict(bg_cas5, newdata = x.test, type = "prob")[, 2]
+# ETAPE 3: Trouver le performance du modele (True Positive Rate & Positive True Rate)
+bagging.pred <- prediction(bagging.probas, y.test)
+bagging.perf <- performance(bagging.pred, "tpr", "fpr")
+
+
+
+
+######################## LE MODELE OPTIMALE ###################
+########## MODELE 3: RANDOM FOREST ###############
+# ETAPE 1: Algorithme du modele randomForest 
+library(randomForest)
+rff_cas5=randomForest(target~.,data=train,mtry=2,ntree=50, proximity=TRUE)
+# ETAPE 2: Faire la prediction du modele en utilisant "predict"
+forest.probas <- predict(rff_cas5, newdata = x.test, type = "prob")[, 2]
+# ETAPE 3: Trouver le performance du modele (True Positive Rate & Positive True Rate)
+forest.pred <- prediction(forest.probas, y.test)
+forest.perf <- performance(forest.pred, "tpr", "fpr")
+
+
+######################## LE MODELE OPTIMALE ###################
+########## MODELE 4: BOOSTING ###############
+
+library(adabag)
+library(ROCR)
+
+# ETAPE 1: Algorithme du modele "BOOSTING" 
+#Fit the boosting model
+modelboost <- boosting(target ~ ., data = train, mfinal=100,coeflearn='Breiman',boos=FALSE)
+pboosting <- predict(modelboost,newdata=test)
+mt <- c(1,5,10,20,50,100)
+ttb <- function(m){
+  bo <- boosting(target ~ .,data=train,mfinal=m,coeflearn='Breiman',boss=F)
+  predbo <- predict(bo,newdata = test)
+  return(predbo$error)
+}
+result <- replicate(5,sapply(mt,ttb))
+parm =list(cp=0.1,maxdepth=5,minbucket=5)
+stump.boosting <- boosting(target ~ ., data = train, mfinal = 20, coeflearn = 'Breiman', control = parm, boss = F)
+
+# ETAPE 2: Faire la prediction du modele en utilisant "predict" 
+boosting.probas <- predict(stump.boosting, newdata = x.test, type = "prob")
+
+# ETAPE 3: Using prediction class probability to compare them to the true values
+# Create a prediction object
+#The prediction object is used to calculate various performance metrics such as
+#accuracy, precision, recall, and the receiver operating characteristic (ROC) curve.
+boosting.pred <- prediction(boosting.probas$prob[, 2], y.test)
+
+# ETAPE 4: Trouver le performance du modele
+# Calculate the true positive rate and false positive rate
+boosting.perf <- performance(boosting.pred, "tpr", "fpr")
+
+# Plot the ROC curve
+plot(boosting.perf, main = "ROC Curve - Boosting Model", colorize = TRUE, print.cutoffs.at = seq(0, 1, 0.1))
+
+
+
+
+# Tracer chaque courbe ROC
+plot(tree.perf , col="blue", lwd=2, main="Courbe ROC pour 4 modèles")
+lines(as.numeric(bagging.perf@x.values[[1]]), as.numeric(bagging.perf@y.values[[1]]), col="red", lwd=2)
+lines(as.numeric(forest.perf@x.values[[1]]), as.numeric(forest.perf@y.values[[1]]), col="green", lwd=2)
+lines(as.numeric(boosting.perf @x.values[[1]]), as.numeric(boosting.perf @y.values[[1]]), col="purple", lwd=2)
+
+# Ajouter une légende
+legend("bottomright", c("Arbre de décision", "Bagging", "Random Forest", "Boosting"), col=c("blue", "red", "green", "purple"), lty=1, lwd=2)
+
+
+
+#############################################################################
+#############################################################################
+########################## FINALEMENT ################################
+####### CHERCHONS QUELLE LE MODELE LE PLUS RADIDE #######
+
+library(microbenchmark)
+library("caret")
+timbag= microbenchmark(times=10,unit = "ms", 
+                       
+                       "ARBRE DE DECISION"={dendri_cas1 <- rpart(target~., data=train, method="class", control=rpart.control(minsplit=5,cp=0))
+                       
+                       } ,
+                       
+                       "BAGGING"={ bagCtrl <- bagControl(fit = ctreeBag$fit,
+                                                         predict = ctreeBag$pred,
+                                                         aggregate = ctreeBag$aggregate)
+                       bg_cas5 <- bag(x=train[,names(train)!="target"],y=train$target, data = train,
+                                      B= 100, bagControl = bagCtrl)
+                       },   
+                       
+                       "RANDOM FOREST"={  rff_cas5=randomForest(target~.,data=train,mtry=2,ntree=50, proximity=TRUE)
+                       },   
+                       
+                       "BOOSTING"={  modelboost <- boosting(target ~ ., data = train, mfinal=100,coeflearn='Breiman',boos=FALSE)
+                       
+                       }
+)
+
+#pour comparer graphiquement le temps de chaque cas de bagging-->fonction "autoplot"
+#pour trouver la moyenne de temps de chaque cas de bagging-->fonction "summary"
+### c'est le temps d'excusion de chaque methode
+autoplot(timbag)
+summary(timbag)
+
+tinytex::install_tinytex()
+
+tinytex::uninstall_tinytex()
+################################## !!!!!! REFERENCES !!!!!! ###################################
+#######TO VISUALIZE QUALITATIVE & QUANTITATIVE VARIABLES######
+#### https://www.r-bloggers.com/2021/08/how-to-plot-categorical-data-in-r-quick-guide/ ###
+## https://rstudio-pubs-static.s3.amazonaws.com/224337_f0de438bd82e4a769e55e039e33b6a0a.html ##
+## https://odr.inrae.fr/intranet/carto/cartowiki/index.php/Statistiques_descriptives_avec_R ##
+## https://larmarange.github.io/analyse-R/graphiques-bivaries-ggplot2.html ##
